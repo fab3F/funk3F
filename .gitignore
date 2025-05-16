@@ -59,7 +59,9 @@ idea_modules/
 
 
 config/*
-!config/config.json.sample
+!config/config.yml.sample
 !config/server/
 config/server/*
-!config/server/template.json
+!config/server/template.yml
+
+logs

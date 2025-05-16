@@ -9,24 +9,22 @@ public class SyIO {
         syIO = syIO == null ? new SyIO() : syIO;
         return syIO;
     }
-
     private final Scanner in;
-    private final String filesep;
-
     public SyIO(){
         in = new Scanner(System.in);
-        filesep = File.separator;
     }
-
     public String readLine(){return in.nextLine();}
-    public void print(String s){System.out.print(s);}
-    public void print(int i){System.out.print(i);}
-    public void print(long l){System.out.print(l);}
-    public void println(String s){System.out.println(s);}
-    public void println(int i){System.out.println(i);}
-    public void println(long l){System.out.println(l);}
     public void closeSys(){in.close();}
-    public String getFilesep(){return filesep;}
+
+    // static
+    public static void print(String s){System.out.print(s);}
+    public static void print(int i){System.out.print(i);}
+    public static void print(long l){System.out.print(l);}
+    public static void println(String s){System.out.println(s);}
+    public static void println(int i){System.out.println(i);}
+    public static void println(long l){System.out.println(l);}
+
+    public static final String sep = File.separator;
 
     public static String replaceLast(String input, String regex, String replacement) {
         return input.replaceFirst("(?s)(.*)" + regex, "$1" + replacement);

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Logger{
+public class Logger {
 
     private PrintStream console;
     private PrintStream file;
@@ -19,7 +19,7 @@ public class Logger{
     private static final String s_error = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss").format(new Date()) + " [ERROR] ";
 
 
-    private String mode = "DEBUG"; //can be DEBUG, NORMAL, MINIMAL
+    private String mode ; //can be DEBUG, NORMAL, MINIMAL
 
     public void debug(String message){
         if(this.mode.equalsIgnoreCase("debug"))
@@ -38,9 +38,28 @@ public class Logger{
     }
 
 
-    public Logger(File f, String mode){
+    public Logger(String folder, String mode){
+        if(folder == null || folder.isBlank()){
+            SyIO.println("[LOGGER-NOT-INITIALIZED] Unknown log folder.");
+            System.exit(0);
+        }
+        File f = new File(folder + SyIO.sep + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date()) + "-bot.log");
         if(cantCreateFile(f))
             return;
+
+        if (mode != null && !mode.isBlank()) {
+            String modeLower = mode.toLowerCase();
+            switch (modeLower) {
+                case "debug", "normal", "minimal" -> mode = modeLower;
+                default -> {
+                    mode = "debug";
+                    SyIO.println("[LOGGER-NOT-INITIALIZED] Unknown log mode. Falling back to \"debug\".");
+                }
+            }
+        } else {
+            mode = "debug";
+            SyIO.println("[LOGGER-NOT-INITIALIZED] Unknown log mode. Falling back to \"debug\".");
+        }
         this.mode = mode;
         this.console = System.out;
         try {

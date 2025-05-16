@@ -1,0 +1,15 @@
+# Config for Discord Bot
+token: "DC TOKEN GOES HERE" # DC Bot Token
+logPath: "logs"
+logMode: "DEBUG" # Can be "DEBUG", "NORMAL" or "MINIMAL"
+serverConfigPath: "server"
+adminIds: # DC Admin IDs
+  - "99999999"
+activity:
+  - "watching"
+  - "fab3F Homepage"
+autoPlayerName: "Premium Autoplayer"
+lastFmKey: "KEY"
+lastFmSecret: "SECRET"
+publicYtApiUrl: "https://www.youtube.com/youtubei/v1/player?key="
+publicYtApiKey: "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"

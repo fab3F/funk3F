@@ -15,6 +15,7 @@ dependencies {
     implementation("net.dv8tion:JDA:5.5.1")
     implementation("dev.arbjerg:lavalink-client:3.2.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.0")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
