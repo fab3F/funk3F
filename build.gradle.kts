@@ -8,9 +8,13 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven("https://maven.lavalink.dev/releases")
 }
 
 dependencies {
+    implementation("net.dv8tion:JDA:5.5.1")
+    implementation("dev.arbjerg:lavalink-client:3.2.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
@@ -24,7 +28,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
         attributes["Main-Class"] = "net.fab3F.Main"
     }
     archiveBaseName.set("funk3F")
-    archiveVersion.set("1.0")
+    archiveVersion.set(project.version.toString())
     archiveClassifier.set("")
 }
 

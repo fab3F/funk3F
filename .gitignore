@@ -56,3 +56,9 @@ idea_modules/
 .idea/
 .idea/workspace.xml
 .idea/shelf/
+
+config/
+config/server
+config/config.json
+!config/config.json.sample
+!config/server/template.json
