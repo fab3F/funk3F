@@ -53,3 +53,6 @@ bin/
 hs_err_pid*
 /out/
 idea_modules/
+.idea/
+.idea/workspace.xml
+.idea/shelf/
