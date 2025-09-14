@@ -1,15 +1,22 @@
 # Config for Discord Bot
 token: "DC TOKEN GOES HERE" # DC Bot Token
-logPath: "logs"
-logMode: "DEBUG" # Can be "DEBUG", "NORMAL" or "MINIMAL"
-serverConfigPath: "server"
-adminIds: # DC Admin IDs
-  - "99999999"
-activity:
-  - "watching"
-  - "fab3F Homepage"
-autoPlayerName: "Premium Autoplayer"
+# lastFM config (For newest trends/charts)
 lastFmKey: "KEY"
 lastFmSecret: "SECRET"
+logMode: "DEBUG" # Can be "DEBUG", "NORMAL" or "MINIMAL"
+adminIds: # DC USER IDS for people with admin rights for this bot
+  - "99999999"
+activity: # Set the bots activity
+  - "watching" # can be "playing", "listening", "competing", "watching" or "custom"
+  - "fab3F Homepage" # the text that shows up
+autoPlayerName: "Premium Autoplayer" # This name shows up in autoplay requests
+lavalinkAddress: "localhost" # Address, use "localhost" if your address is 127.0.0.1
+lavalinkPort: "2333" # Port of Lavalink Node
+lavalinkPassword: "youshallnotpass"
+
+# only change if really necessary
+logPath: "logs" # logs folder
+serverConfigPath: "server" # config folder for server config
 publicYtApiUrl: "https://www.youtube.com/youtubei/v1/player?key="
 publicYtApiKey: "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
+volumescale: "0.1" # loudness normalization scale

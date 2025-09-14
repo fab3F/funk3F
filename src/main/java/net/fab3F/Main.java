@@ -7,43 +7,56 @@ import net.fab3F.customTools.SyIO;
 
 public class Main {
 
-    public static Main main;
-
     private static final String configPath = "config";
-    private final Logger logger;
+    public static Logger logger;
 
-    public ConfigWorker configW;
-    public ConfigWorker.BotConfig botConfig;
-    public Bot bot;
+    public static ConfigWorker configW;
+    public static ConfigWorker.BotConfig botConfig;
+    public static Bot bot;
 
 
     public static void main(String[] args) {
-        main = new Main();
+        setupMain();
     }
 
-    public Main(){
-        this.configW = new ConfigWorker(configPath);
-        this.botConfig = this.configW.getBotConfig();
-        this.logger = new Logger(this.botConfig.getLogPath(), this.botConfig.getLogMode());
-        this.configW.setLogger(this.getLogger());
-        this.logger.log("Starting Bot");
-        this.bot = new Bot(this.botConfig.getToken());
+    private static void setupMain(){
+        configW = new ConfigWorker(configPath);
+        botConfig = configW.getBotConfig();
+        logger = new Logger(botConfig.getLogPath(), botConfig.getLogMode());
+        configW.setLogger(logger);
+        logger.log("Started Main and now Starting Bot");
+        bot = new Bot(botConfig.getToken(), logger);
     }
 
+    // set region (auch für yt search)
 
 
-    public Logger getLogger(){
-        return this.logger;
+
+    public static void reloadBotConfig(){
+        logger.log("Reloading Bot Config.");
+        botConfig = configW.getBotConfig();
+        bot.reloadActivity();
+        // loudness manager set new scale
+
     }
 
+    public static void restart(){
+        logger.log("Restaring (Stopping Bot + Main and then starting Main + Bot)");
+        stopMain();
+        setupMain();
+    }
 
-    public void exit(){
-        this.logger.close();
+    public static void exit(){
+        logger.log("Stopping All.");
+        stopMain();
         SyIO.getSyIO().closeSys();
     }
 
-    public void reloadBotConfig(){
-        this.botConfig = this.configW.getBotConfig();
+    private static void stopMain(){
+        logger.log("Stopping Main.");
+        logger.close();
+        bot.stop();
+        // other things?
     }
 
 }

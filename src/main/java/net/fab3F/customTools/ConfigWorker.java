@@ -115,16 +115,22 @@ public class ConfigWorker {
     public static class BotConfig {
         public BotConfig() {}
         private String token;
-        private String logPath;
+        private String lastFmKey;
+        private String lastFmSecret;
         private String logMode;
-        private String serverConfigPath;
         private List<String> adminIds;
         private List<String> activity;
         private String autoPlayerName;
-        private String lastFmKey;
-        private String lastFmSecret;
+
+        private String logPath;
+        private String serverConfigPath;
         private String publicYtApiUrl;
         private String publicYtApiKey;
+        private String volumeScale;
+        private String lavalinkAddress;
+        private String lavalinkPort;
+        private String lavalinkPassword;
+
         private String safeTrim(String value) {
             if (value == null) {
                 SyIO.println("[CONFIG-ERROR] Error while reading bot config. Make sure the config file is correct.");
@@ -136,14 +142,14 @@ public class ConfigWorker {
         public String getToken() {
             return safeTrim(token);
         }
-        public String getLogPath() {
-            return safeTrim(logPath);
+        public String getLastFmKey() {
+            return safeTrim(lastFmKey);
+        }
+        public String getLastFmSecret() {
+            return safeTrim(lastFmSecret);
         }
         public String getLogMode() {
             return safeTrim(logMode);
-        }
-        public String getServerConfigPath() {
-            return safeTrim(serverConfigPath);
         }
         public List<String> getAdminIds() {
             return adminIds;
@@ -154,17 +160,30 @@ public class ConfigWorker {
         public String getAutoPlayerName() {
             return safeTrim(autoPlayerName);
         }
-        public String getLastFmKey() {
-            return safeTrim(lastFmKey);
+
+        public String getLogPath() {
+            return safeTrim(logPath);
         }
-        public String getLastFmSecret() {
-            return safeTrim(lastFmSecret);
+        public String getServerConfigPath() {
+            return safeTrim(serverConfigPath);
         }
         public String getPublicYtApiUrl() {
             return safeTrim(publicYtApiUrl);
         }
         public String getPublicYtApiKey() {
             return safeTrim(publicYtApiKey);
+        }
+        public String getVolumeScale() {
+            return safeTrim(volumeScale);
+        }
+        public String getLavalinkAddress() {
+            return safeTrim(lavalinkAddress);
+        }
+        public String getLavalinkPort() {
+            return safeTrim(lavalinkPort);
+        }
+        public String getLavalinkPassword() {
+            return safeTrim(lavalinkPassword);
         }
     }
 

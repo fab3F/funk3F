@@ -12,8 +12,8 @@ public class PermissionWorker {
     public String hasPermission(Member member, PermissionGroup permissionGroup) {
         Set<Permission> requiredPermissions = PermissionConfig.PERMISSIONS_MAP.get(permissionGroup);
         if (requiredPermissions == null) {
-            Main.main.getLogger().error("Error 12: requiredPermissions is null for this botPermission: " + permissionGroup.name());
-            return "_FALSE_Error 12: Der erforderlichen Berechtigungen existieren nicht. Bitte versuche es zu einem späteren Zeitpunkt erneut.";
+            Main.logger.error("Error 12: requiredPermissions is null for this botPermission: " + permissionGroup.name());
+            return "_FALSE_Error 12: Die erforderlichen Berechtigungen existieren nicht. Bitte versuche es zu einem späteren Zeitpunkt erneut.";
         }
 
         StringBuilder sb = new StringBuilder();

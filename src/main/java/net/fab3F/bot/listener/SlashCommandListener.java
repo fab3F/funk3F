@@ -1,23 +1,23 @@
 package net.fab3F.bot.listener;
 
-import bot.Bot;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
+import net.fab3F.Main;
 
 
 public class SlashCommandListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-       Bot.instance.getCommandManager().perform(event);
+       Main.bot.commandManager.perform(event);
     }
 
     @Override
     public void onReady(ReadyEvent event) {
-        Bot.instance.getCommandManager().updateCommands(event.getJDA());
+        Main.bot.commandManager.updateCommands(event.getJDA());
     }
 
     @Override

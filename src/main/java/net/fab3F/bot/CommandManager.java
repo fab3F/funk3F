@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.fab3F.Main;
+import net.fab3F.bot.commands.PingCmd;
+import net.fab3F.bot.commands.TestCommand;
 import net.fab3F.bot.perm.PermissionGroup;
 
 import java.util.Locale;
@@ -13,15 +15,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CommandManager {
 
-    private Bot bot = Main.main.bot;
-
     public ConcurrentHashMap<String, ServerCommand> commands;
 
     public CommandManager() {
 
         this.commands = new ConcurrentHashMap<>();
 
-        //this.commands.put("ping", new PingCmd());
+        this.commands.put("ping", new PingCmd());
+        this.commands.put("test", new TestCommand());
         /*
         this.commands.put("help", new HelpCmd());
         this.commands.put("clear", new ClearCmd());
@@ -71,7 +72,7 @@ public class CommandManager {
 
         if(e.getGuild() != null){
             PermissionGroup neededBotPerm = cmd.getBotPermission();
-            String permCheck1 = this.bot.pW.hasPermission(e.getGuild().getSelfMember(), neededBotPerm);
+            String permCheck1 = Main.bot.pW.hasPermission(e.getGuild().getSelfMember(), neededBotPerm);
             if(!permCheck1.equals("_TRUE_")){
                 e.reply("Dem Bot fehlt die Berechtigungen:\n" + permCheck1.replaceFirst("_FALSE_", "")).setEphemeral(true).queue();
                 return;
@@ -80,8 +81,8 @@ public class CommandManager {
 
 
         PermissionGroup neededUserPerm = cmd.getUserPermission();
-        String permCheck2 = this.bot.pW.hasPermission(e.getMember(), neededUserPerm);
-        if(!permCheck2.equals("_TRUE_") && !Main.main.botConfig.getAdminIds().contains(e.getUser().getId())){
+        String permCheck2 = Main.bot.pW.hasPermission(e.getMember(), neededUserPerm);
+        if(!permCheck2.equals("_TRUE_") && !Main.botConfig.getAdminIds().contains(e.getUser().getId())){
             e.reply("Um diesen Befehl auszuführen ist folgende Berechtigungsgruppe erforderlich:\n" +
                     neededUserPerm.name() + " - " + neededUserPerm.getDescription() + "\n" +
                     "Folgende Berechtigung(en) fehlen dir: " + permCheck2.replaceFirst("_FALSE_", "")).setEphemeral(true).queue();
@@ -112,7 +113,7 @@ public class CommandManager {
             try {
                 e.reply(getUsage(cmd, cmdName)).setEphemeral(true).queue();
             } catch (Exception ex) {
-                Main.main.getLogger().error("Bei der Ausführung eines Befehls ist ein unbekannter Fehler aufgetreten: " + e.getCommandString() + "\n" + e.getChannel().getName());
+                Main.logger.error("Bei der Ausführung eines Befehls ist ein unbekannter Fehler aufgetreten: " + e.getCommandString() + "\n" + e.getChannel().getName() + "\n" + ex.getMessage());
             }
         }
 
