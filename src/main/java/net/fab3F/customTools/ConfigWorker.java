@@ -90,26 +90,53 @@ public class ConfigWorker {
     // Config Classes
     public static class ServerConfig {
         public ServerConfig(){}  // Jackson will throw Exception without this
-        private String defaultautoplaysong;
-        private String defaultvolume;
-        private String volumenormalization;
-        public String getDefaultautoplaysong() {
-            return defaultautoplaysong;
+        private String default_autoplay;
+        private String default_autoplay_song;
+        private String default_volume;
+        private String volume_normalization;
+        public String isDefaultAutoplay() {
+            return default_autoplay;
+        }
+        public String getDefaultAutoplaySong() {
+            return default_autoplay_song;
         }
         public String getDefaultvolume() {
-            return defaultvolume;
+            return default_volume;
         }
-        public String isVolumenormalization() {
-            return volumenormalization;
+        public String isVolumeNormalization() {
+            return volume_normalization;
         }
-        public void setDefaultautoplaysong(String defaultautoplaysong) {
-            this.defaultautoplaysong = defaultautoplaysong.trim();
+        public void setDefaultAutoplay(String default_autoplay) {
+            this.default_autoplay = default_autoplay.trim();
         }
-        public void setDefaultvolume(String defaultvolume) {
-            this.defaultvolume = defaultvolume.trim();
+        public void setDefaultAutoplaySong(String default_autoplay_song) {
+            this.default_autoplay_song = default_autoplay_song.trim();
         }
-        public void setVolumenormalization(String volumenormalization) {
-            this.volumenormalization = volumenormalization.trim();
+        public void setDefaultVolume(String default_volume) {
+            this.default_volume = default_volume.trim();
+        }
+        public void setVolumeNormalization(String volume_normalization) {
+            this.volume_normalization = volume_normalization.trim();
+        }
+        public String get(String key) {
+            return switch(key) {
+                case "default_autoplay" -> default_autoplay;
+                case "default_autoplay_song" -> default_autoplay_song;
+                case "default_volume" -> default_volume;
+                case "volume_normalization" -> volume_normalization;
+                default -> null;
+            };
+        }
+        public boolean set(String key, String value) {
+            boolean b = true;
+            switch(key) {
+                case "default_autoplay" -> default_autoplay = value.trim();
+                case "default_autoplay_song" -> default_autoplay_song = value.trim();
+                case "default_volume" -> default_volume = value.trim();
+                case "volume_normalization" -> volume_normalization = value.trim();
+                default -> b = false;
+            }
+            return b;
         }
     }
     public static class BotConfig {

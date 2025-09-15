@@ -13,28 +13,22 @@ public class Logger {
     private PrintStream console;
     private PrintStream file;
 
-    private static final String s_debug = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss").format(new Date()) + " [DEBUG] ";
-    private static final String s_log = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss").format(new Date()) + " [LOG] ";
-    private static final String s_thread = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss").format(new Date()) + " [THREAD] ";
-    private static final String s_error = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss").format(new Date()) + " [ERROR] ";
-
-
-    private String mode ; //can be DEBUG, NORMAL, MINIMAL
+    private String mode = "debug" ; //can be DEBUG, NORMAL, MINIMAL
 
     public void debug(String message){
         if(this.mode.equalsIgnoreCase("debug"))
-            System.out.println(s_debug + message);
+            System.out.println(getDate() + " [DEBUG] " + message);
     }
     public void log(String message){
         if(this.mode.equalsIgnoreCase("debug") || this.mode.equalsIgnoreCase("normal"))
-            System.err.println(s_log + message);
+            System.out.println(getDate() + " [LOG] " + message);
     }
     public void thread(String message){
         if(this.mode.equalsIgnoreCase("debug") || this.mode.equalsIgnoreCase("normal"))
-            System.out.println(s_thread + message);
+            System.out.println(getDate() + " [THREAD] " + message);
     }
     public void error(String message){
-        System.out.println(s_error + message);
+        System.out.println(getDate() + " [ERROR] " + message);
     }
 
 
@@ -43,7 +37,7 @@ public class Logger {
             SyIO.println("[LOGGER-NOT-INITIALIZED] Unknown log folder.");
             System.exit(0);
         }
-        File f = new File(folder + SyIO.sep + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date()) + "-bot.log");
+        File f = new File(folder + SyIO.sep + getDate() + "-bot.log");
         if(cantCreateFile(f))
             return;
 
@@ -101,6 +95,10 @@ public class Logger {
             }
         }
         return true;
+    }
+
+    private static String getDate(){
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
     }
 
 }

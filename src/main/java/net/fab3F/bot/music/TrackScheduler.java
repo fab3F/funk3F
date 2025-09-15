@@ -2,6 +2,8 @@ package net.fab3F.bot.music;
 
 import dev.arbjerg.lavalink.client.player.Track;
 import dev.arbjerg.lavalink.protocol.v4.Message;
+import dev.arbjerg.lavalink.protocol.v4.TrackInfo;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.fab3F.Main;
 
 import java.util.LinkedList;
@@ -48,8 +50,12 @@ public class TrackScheduler {
     }
 
     public void onTrackStart(Track track) {
-        // Your homework: Send a message to the channel somehow, have fun!
-        System.out.println("Track started: " + track.getInfo().getTitle());
+        TrackInfo info = track.getInfo();
+        String msg = "Jetzt spielt: **`" + info.getTitle() + "`** von **`" + info.getAuthor() + "`** [" + MusicHelper.calcDuration((int)info.getLength()) + "]";
+        TextChannel channel = MusicHelper.resolveTextChannel(this.guildId, track.getUserData(CustomTrackData.class).channelId());
+        if (channel != null) {
+            channel.sendMessage(msg).queue();
+        }
     }
 
     public void onTrackEnd(Track lastTrack, Message.EmittedEvent.TrackEndEvent.AudioTrackEndReason endReason) {

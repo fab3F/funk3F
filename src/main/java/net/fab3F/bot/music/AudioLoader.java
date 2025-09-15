@@ -11,7 +11,6 @@ public class AudioLoader extends AbstractAudioLoadResultHandler {
     private final SlashCommandInteractionEvent event;
     private final TrackScheduler scheduler;
     private final String input;
-
     public AudioLoader(String input, SlashCommandInteractionEvent event, TrackScheduler scheduler) {
         this.event = event;
         this.scheduler = scheduler;
@@ -21,48 +20,46 @@ public class AudioLoader extends AbstractAudioLoadResultHandler {
     @Override
     public void ontrackLoaded(@NotNull TrackLoaded result) {
         final Track track = result.getTrack();
-        track.setUserData(new CustomTrackData(this.input, event.getUser().getName(), event.getChannel().asTextChannel()));
+        track.setUserData(new CustomTrackData(this.input, event.getUser().getName(), event.getChannel().asTextChannel().getIdLong()));
 
         this.scheduler.enqueue(track);
 
-        final var trackTitle = track.getInfo().getTitle();
-
-        event.getHook().sendMessage("Added to queue: " + trackTitle).queue();
+        event.getHook().sendMessage("Song zur Wiedergabeliste hinzugefügt: **`" + track.getInfo().getTitle() + "`**").queue();
     }
 
     @Override
     public void onPlaylistLoaded(@NotNull PlaylistLoaded result) {
         final int trackCount = result.getTracks().size();
-        event.getHook()
-                .sendMessage("Added " + trackCount + " tracks to the queue from " + result.getInfo().getName() + "!")
-                .queue();
 
         this.scheduler.enqueuePlaylist(result.getTracks());
+
+        event.getHook()
+                .sendMessage("Es wurden **`" + trackCount + "`** Songs von **`" + result.getInfo().getName() + "`** zu Wiedergabeliste hinzugefügt!")
+                .queue();
     }
 
     @Override
     public void onSearchResultLoaded(@NotNull SearchResult result) {
         final List<Track> tracks = result.getTracks();
-
+        String msg;
         if (tracks.isEmpty()) {
-            event.getHook().sendMessage("No tracks found!").queue();
-            return;
+            msg = "Keine Ergebnisse gefunden für folgende Eingabe: " + input;
+        } else {
+            final Track track = tracks.get(0);
+            track.setUserData(new CustomTrackData(this.input, event.getUser().getName(), event.getChannel().asTextChannel().getIdLong()));
+            this.scheduler.enqueue(track);
+            msg = "Song zur Wiedergabeliste hinzugefügt: **`" + track.getInfo().getTitle() + "`**";
         }
-
-        final Track firstTrack = tracks.get(0);
-
-        event.getHook().sendMessage("Adding to queue: " + firstTrack.getInfo().getTitle()).queue();
-
-        this.scheduler.enqueue(firstTrack);
+        event.getHook().sendMessage(msg).queue();
     }
 
     @Override
     public void noMatches() {
-        event.getHook().sendMessage("No matches found for your input!").queue();
+        event.getHook().sendMessage("Keine Ergebnisse gefunden für folgende Eingabe: " + input).queue();
     }
 
     @Override
     public void loadFailed(@NotNull LoadFailed result) {
-        event.getHook().sendMessage("Failed to load track! " + result.getException().getMessage()).queue();
+        event.getHook().sendMessage("Beim Laden eines Songs ist ein Fehler aufgetreten. Falls eine Playlist abgespielt werden soll, stelle sicher, dass sie nicht auf privat gestellt ist. Eingabe:\n" + input).queue();
     }
 }

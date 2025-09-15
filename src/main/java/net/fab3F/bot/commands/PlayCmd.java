@@ -9,7 +9,7 @@ import net.fab3F.bot.music.VoiceHelper;
 import net.fab3F.bot.perm.PermissionGroup;
 
 
-public class TestCommand implements ServerCommand {
+public class PlayCmd implements ServerCommand {
     @Override
     public boolean peformCommand(SlashCommandInteractionEvent e) {
         if(e.getOption("title") == null || e.getMember() == null || e.getGuild() == null){

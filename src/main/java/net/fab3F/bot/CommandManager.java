@@ -5,8 +5,9 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.fab3F.Main;
+import net.fab3F.bot.commands.ConfigCmd;
 import net.fab3F.bot.commands.PingCmd;
-import net.fab3F.bot.commands.TestCommand;
+import net.fab3F.bot.commands.PlayCmd;
 import net.fab3F.bot.perm.PermissionGroup;
 
 import java.util.Locale;
@@ -22,7 +23,9 @@ public class CommandManager {
         this.commands = new ConcurrentHashMap<>();
 
         this.commands.put("ping", new PingCmd());
-        this.commands.put("test", new TestCommand());
+        this.commands.put("play", new PlayCmd());
+        this.commands.put("config", new ConfigCmd());
+
         /*
         this.commands.put("help", new HelpCmd());
         this.commands.put("clear", new ClearCmd());

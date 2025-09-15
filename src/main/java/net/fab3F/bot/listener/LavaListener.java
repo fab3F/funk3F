@@ -1,10 +1,8 @@
 package net.fab3F.bot.listener;
 
 import dev.arbjerg.lavalink.client.event.*;
-import dev.arbjerg.lavalink.protocol.v4.TrackInfo;
+import dev.arbjerg.lavalink.client.player.Track;
 import net.fab3F.Main;
-import net.fab3F.bot.music.CustomTrackData;
-import net.fab3F.bot.music.MusicHelper;
 import net.fab3F.customTools.Logger;
 
 public class LavaListener {
@@ -14,16 +12,15 @@ public class LavaListener {
     }
 
     public void handleTrackStart(TrackStartEvent event){
-        TrackInfo info = event.getTrack().getInfo();
+        Track track = event.getTrack();
         logger.debug(String.format(
                 "[Lava-Listener] Node: '%s'; Guild: '%s (%s)' ; Track started -> %s",
                 event.getNode().getName(),
                 Main.bot.getShardManager().getGuildById(event.getGuildId()).getName(),
                 event.getGuildId(),
-                info.getTitle()
+                track.getInfo().getTitle()
         ));
-        String msg = "Jetzt spielt: **`" + info.getTitle() + "`** von **`" + info.getAuthor() + "`** [" + MusicHelper.calcDuration((int)info.getLength()) + "]";
-        event.getTrack().getUserData(CustomTrackData.class).channel().sendMessage(msg).queue();
+        Main.bot.getMusicHelper().getOrCreateTrackScheduler(event.getGuildId()).onTrackStart(track);
     }
 
     public void handleTrackEnd(TrackEndEvent event){
@@ -33,6 +30,7 @@ public class LavaListener {
                 event.getTrack().getInfo().getTitle(),
                 event.getEndReason()
         ));
+        Main.bot.getMusicHelper().getOrCreateTrackScheduler(event.getGuildId()).onTrackEnd(event.getTrack(), event.getEndReason());
     }
 
     public void handleTrackException(TrackExceptionEvent event){

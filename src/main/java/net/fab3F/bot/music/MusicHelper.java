@@ -3,6 +3,8 @@ package net.fab3F.bot.music;
 import dev.arbjerg.lavalink.client.LavalinkClient;
 import dev.arbjerg.lavalink.client.Link;
 import dev.arbjerg.lavalink.client.player.LavalinkPlayer;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.fab3F.Main;
 import net.fab3F.customTools.Logger;
@@ -62,6 +64,10 @@ public class MusicHelper {
         return this.client;
     }
 
+    public TrackScheduler getOrCreateTrackScheduler(long guildId){
+        return schedulers.computeIfAbsent(guildId, TrackScheduler::new);
+    }
+
     public static String calcDuration(int millis){
         int durationInSeconds = millis / 1000;
         int hours = durationInSeconds / 3600;
@@ -76,7 +82,10 @@ public class MusicHelper {
         return length;
     }
 
-    private TrackScheduler getOrCreateTrackScheduler(long guildId){
-        return schedulers.computeIfAbsent(guildId, TrackScheduler::new);
+    public static TextChannel resolveTextChannel(long guildId, long channelId) {
+        Guild guild = Main.bot.getShardManager().getGuildById(guildId);
+        if (guild == null) return null;
+        return guild.getChannelById(TextChannel.class, channelId);
     }
+
 }
