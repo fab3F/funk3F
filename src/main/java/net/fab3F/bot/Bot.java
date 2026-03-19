@@ -1,12 +1,6 @@
 package net.fab3F.bot;
 
 import dev.arbjerg.lavalink.client.Helpers;
-import dev.arbjerg.lavalink.client.LavalinkClient;
-import dev.arbjerg.lavalink.client.LavalinkNode;
-import dev.arbjerg.lavalink.client.NodeOptions;
-import dev.arbjerg.lavalink.client.event.TrackStartEvent;
-import dev.arbjerg.lavalink.client.loadbalancing.RegionGroup;
-import dev.arbjerg.lavalink.client.loadbalancing.builtin.VoiceRegionPenaltyProvider;
 import dev.arbjerg.lavalink.libraries.jda.JDAVoiceUpdateListener;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
@@ -14,70 +8,60 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import net.fab3F.Main;
+import net.fab3F.ConfigWorker;
 import net.fab3F.bot.listener.VoiceListener;
 import net.fab3F.bot.listener.MessageListener;
 import net.fab3F.bot.listener.SlashCommandListener;
-import net.fab3F.bot.music.MusicHelper;
+import net.fab3F.bot.music.MusicHandler;
 import net.fab3F.bot.perm.PermissionWorker;
-import net.fab3F.customTools.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class Bot {
 
-    private final Logger logger;
-    public final CommandManager commandManager;
+    private final Logger logger = LoggerFactory.getLogger(Bot.class);
     private ShardManager shardManager;
-
-    private final MusicHelper musicHelper;
-
-    public PermissionWorker pW;
-
+    private final ConfigWorker cw;
+    private final CommandManager commandManager;
+    private final PermissionWorker pW;
+    private final MusicHandler musicHandler;
     private long lastMusicPlayerManagerRestart;
-    private ScheduledExecutorService schedulerService;
-    //private PlayerManager playerManager;
 
-    public Bot(String token, Logger logger){
-        this.logger = logger;
+    public Bot(String token, ConfigWorker cw){
         if(token==null || token.isBlank()){
-            logger.error("No Discord Bot Token.");
+            logger.error("01: No Discord Bot Token.");
             System.exit(0);
         }
+        this.cw = cw;
         this.pW = new PermissionWorker();
-        this.commandManager = new CommandManager();
         long botId = Helpers.getUserIdFromToken(token);
-        this.musicHelper = new MusicHelper(botId);
-
+        this.musicHandler = new MusicHandler(botId, cw);
+        this.commandManager = new CommandManager(cw, pW, this.musicHandler);
 
 
 
         this.buildBot(token);
-
+        this.musicHandler.setShardManager(shardManager);
 
 
         lastMusicPlayerManagerRestart = System.currentTimeMillis();
 
     }
 
-    public MusicHelper getMusicHelper(){
-        return this.musicHelper;
+    public MusicHandler getMusicHandler(){
+        return this.musicHandler;
     }
 
     public void stop(){
-        musicHelper.stopAll();
+        musicHandler.stopAll();
         shardManager.setStatus(OnlineStatus.OFFLINE);
         shardManager.shutdown();
     }
 
-    public ShardManager getShardManager(){
-        return shardManager;
-    }
-
     public void reloadActivity(){
-        this.shardManager.setActivity(getActivity(Main.botConfig.getActivity()));
+        this.shardManager.setActivity(getActivity(cw.getBotConfig().getActivity()));
     }
 
 
@@ -85,10 +69,10 @@ public class Bot {
     private void buildBot(String token){
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(token);
         builder.setStatus(OnlineStatus.ONLINE);
-        builder.addEventListeners(new SlashCommandListener())
+        builder.addEventListeners(new SlashCommandListener(commandManager))
                 .addEventListeners(new VoiceListener())
-                .addEventListeners(new MessageListener());
-        builder.setVoiceDispatchInterceptor(new JDAVoiceUpdateListener(this.musicHelper.getClient()));
+                .addEventListeners(new MessageListener(cw, musicHandler));
+        builder.setVoiceDispatchInterceptor(new JDAVoiceUpdateListener(this.musicHandler.getClient()));
         builder.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_VOICE_STATES);
         builder.enableCache(CacheFlag.VOICE_STATE);
         builder.disableIntents(GatewayIntent.DIRECT_MESSAGE_TYPING, GatewayIntent.GUILD_MESSAGE_TYPING, GatewayIntent.GUILD_PRESENCES);

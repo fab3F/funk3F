@@ -15,7 +15,9 @@ public class VoiceHelper {
         } catch (NullPointerException ignored){}
     }
 
-    public static boolean joinHelper(Member member, Member bot, JDA jda){
+
+    // Returns true if in same voice channel or if bot joined the channel (only does that if doJoin is true)
+    public static boolean joinHelper(Member member, Member bot, JDA jda, boolean doJoin){
         VoiceChannel memberChannel = inVoiceChannel(member);
         if(memberChannel == null){
             return false;
@@ -24,8 +26,13 @@ public class VoiceHelper {
         if(botChannel != null){ // Bot is in voice channel
             return memberChannel.getId().equals(botChannel.getId()); // return false if voice channels are not equal
         } else {
-            jda.getDirectAudioController().connect(memberChannel);
-            return true;
+            if(doJoin){
+                jda.getDirectAudioController().connect(memberChannel);
+                return true;
+            } else {
+                return false;
+            }
+
         }
     }
 

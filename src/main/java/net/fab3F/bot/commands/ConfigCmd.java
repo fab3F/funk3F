@@ -5,16 +5,23 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.fab3F.Main;
 import net.fab3F.bot.ServerCommand;
 import net.fab3F.bot.perm.PermissionGroup;
-import net.fab3F.customTools.ConfigWorker;
+import net.fab3F.ConfigWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.Date;
 import java.util.List;
 
 public class ConfigCmd implements ServerCommand {
+    private final Logger logger = LoggerFactory.getLogger(ConfigCmd.class);
+    private final ConfigWorker cw;
+    public ConfigCmd(ConfigWorker cw){
+        this.cw = cw;
+    }
+
     @Override
     public String cmdName() {
         return "config";
@@ -28,11 +35,10 @@ public class ConfigCmd implements ServerCommand {
         String id = event.getGuild().getId();
 
         if(!options.isEmpty()){
-            ConfigWorker g = Main.configW;
-            ConfigWorker.ServerConfig currentConfig = g.getServerConfig(id);
+            ConfigWorker.ServerConfig serverConfig = cw.getServerConfig(id);
             ConfigWorker.ServerConfig templateConfig = null;
-            if(currentConfig == null){
-                Main.logger.error("Fehler beim Einlesen der Server Config während /config für: '" + id + "'");
+            if(serverConfig == null){
+                logger.error("25: Fehler beim Einlesen der Server Config während /config für: '{}'", id);
                 event.getHook().sendMessage("Fehler beim Einlesen der Server Config").queue();
                 return true;
             }
@@ -48,15 +54,21 @@ public class ConfigCmd implements ServerCommand {
 
                 if ("-1".equals(optionValue)) {
                     if (templateConfig == null) {
-                        templateConfig = g.getServerConfig("template");
+                        templateConfig = cw.getServerConfig("template");
                     }
                     optionValue = templateConfig.get(optionName);
                 }
 
-                if (!currentConfig.set(optionName, optionValue)) {
+                if (!serverConfig.set(optionName, optionValue)) {
                     handleOptionError(optionName, optionValue, id, event);
                     return true;
                 }
+            }
+
+            if(!cw.writeServerConfig(id, serverConfig)){
+                logger.error("26: Fehler beim Schreiben der Konfiguration für: {}", id);
+                event.getHook().sendMessage("Beim Schreiben der neuen Konfiguration ist ein Fehler aufgetreten.").queue();
+                return true;
             }
 
         }
@@ -67,8 +79,8 @@ public class ConfigCmd implements ServerCommand {
 
     private void handleOptionError(String optionName, String optionValue, String serverId, SlashCommandInteractionEvent event) {
         String msg = String.format("Fehler beim Ändern von '%s' zu '%s' für den Server '%s'", optionName, optionValue, serverId);
-        Main.logger.debug(msg);
-        event.getHook().sendMessage("Fehler beim Ändern folgender Einstellung: " + optionName).queue();
+        logger.debug(msg);
+        event.getHook().sendMessage("Fehler beim Ändern folgender Einstellung (Es wurde nichts geändert): " + optionName).queue();
         event.getChannel().sendMessageEmbeds(printCurrent(serverId)).queue();
     }
 
@@ -77,9 +89,9 @@ public class ConfigCmd implements ServerCommand {
         eb.setTitle("Konfiguration");
         eb.setDescription("Dies sind die aktuellen Einstellungen des Bots für diesen Server:");
         eb.setColor(Color.CYAN);
+        ConfigWorker.ServerConfig serverConfig = cw.getServerConfig(guildId);
         for(Option option : this.getOptions()){
-            String value = Main.configW.getServerConfig(guildId).get(option.name);
-            eb.addField(option.name, value, false);
+            eb.addField(option.name, serverConfig.get(option.name), false);
         }
         eb.setFooter("Befehl '/config'");
         eb.setTimestamp(new Date().toInstant());

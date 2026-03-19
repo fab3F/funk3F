@@ -4,11 +4,17 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.fab3F.ConfigWorker;
 import net.fab3F.Main;
+import net.fab3F.bot.commands.AutoplayMusicCmd;
 import net.fab3F.bot.commands.ConfigCmd;
 import net.fab3F.bot.commands.PingCmd;
-import net.fab3F.bot.commands.PlayCmd;
+import net.fab3F.bot.commands.PlayMusicCmd;
+import net.fab3F.bot.music.MusicHandler;
 import net.fab3F.bot.perm.PermissionGroup;
+import net.fab3F.bot.perm.PermissionWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
 import java.util.Map;
@@ -18,13 +24,22 @@ public class CommandManager {
 
     public ConcurrentHashMap<String, ServerCommand> commands;
 
-    public CommandManager() {
+    private final ConfigWorker cw;
+    private final PermissionWorker pW;
+
+    private final Logger logger = LoggerFactory.getLogger(CommandManager.class);
+
+    public CommandManager(ConfigWorker cw, PermissionWorker pW, MusicHandler mH) {
 
         this.commands = new ConcurrentHashMap<>();
 
+        this.cw = cw;
+        this.pW = pW;
+
         this.commands.put("ping", new PingCmd());
-        this.commands.put("play", new PlayCmd());
-        this.commands.put("config", new ConfigCmd());
+        this.commands.put("play", new PlayMusicCmd(mH));
+        this.commands.put("autoplay", new AutoplayMusicCmd(mH));
+        this.commands.put("config", new ConfigCmd(cw));
 
         /*
         this.commands.put("help", new HelpCmd());
@@ -47,7 +62,7 @@ public class CommandManager {
         this.commands.put("trackinfo", new TrackInfoMusicCmd());
         this.commands.put("volume", new VolumeMusicCmd());
         this.commands.put("bassboost", new BassBoostMusicCmd());
-        this.commands.put("autoplay", new AutoPlayMusicCmd());
+        this.commands.put("autoplay", new AutoplayMusicCmd());
 
         this.commands.put("config", new ConfigCmd());
 
@@ -75,7 +90,7 @@ public class CommandManager {
 
         if(e.getGuild() != null){
             PermissionGroup neededBotPerm = cmd.getBotPermission();
-            String permCheck1 = Main.bot.pW.hasPermission(e.getGuild().getSelfMember(), neededBotPerm);
+            String permCheck1 = pW.hasPermission(e.getGuild().getSelfMember(), neededBotPerm);
             if(!permCheck1.equals("_TRUE_")){
                 e.reply("Dem Bot fehlt die Berechtigungen:\n" + permCheck1.replaceFirst("_FALSE_", "")).setEphemeral(true).queue();
                 return;
@@ -84,8 +99,8 @@ public class CommandManager {
 
 
         PermissionGroup neededUserPerm = cmd.getUserPermission();
-        String permCheck2 = Main.bot.pW.hasPermission(e.getMember(), neededUserPerm);
-        if(!permCheck2.equals("_TRUE_") && !Main.botConfig.getAdminIds().contains(e.getUser().getId())){
+        String permCheck2 = pW.hasPermission(e.getMember(), neededUserPerm);
+        if(!permCheck2.equals("_TRUE_") && !cw.getBotConfig().getAdminIds().contains(e.getUser().getId())){
             e.reply("Um diesen Befehl auszuführen ist folgende Berechtigungsgruppe erforderlich:\n" +
                     neededUserPerm.name() + " - " + neededUserPerm.getDescription() + "\n" +
                     "Folgende Berechtigung(en) fehlen dir: " + permCheck2.replaceFirst("_FALSE_", "")).setEphemeral(true).queue();
@@ -116,7 +131,7 @@ public class CommandManager {
             try {
                 e.reply(getUsage(cmd, cmdName)).setEphemeral(true).queue();
             } catch (Exception ex) {
-                Main.logger.error("Bei der Ausführung eines Befehls ist ein unbekannter Fehler aufgetreten: " + e.getCommandString() + "\n" + e.getChannel().getName() + "\n" + ex.getMessage());
+                logger.error("10: Bei der Ausführung eines Befehls ist ein unbekannter Fehler aufgetreten: " + e.getCommandString() + "\nChannel: " + e.getChannel().getName() + "\nFehlermeldung: " + ex.getMessage());
             }
         }
 

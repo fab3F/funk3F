@@ -11,18 +11,20 @@ public class AudioLoader extends AbstractAudioLoadResultHandler {
     private final SlashCommandInteractionEvent event;
     private final TrackScheduler scheduler;
     private final String input;
-    public AudioLoader(String input, SlashCommandInteractionEvent event, TrackScheduler scheduler) {
+    private final boolean playAsFirst;
+    public AudioLoader(String input, SlashCommandInteractionEvent event, TrackScheduler scheduler, boolean playAsFirst) {
         this.event = event;
         this.scheduler = scheduler;
         this.input = input;
+        this.playAsFirst = playAsFirst;
     }
 
     @Override
     public void ontrackLoaded(@NotNull TrackLoaded result) {
         final Track track = result.getTrack();
-        track.setUserData(new CustomTrackData(this.input, event.getUser().getName(), event.getChannel().asTextChannel().getIdLong()));
+        track.setUserData(new CustomTrackData(event.getUser().getIdLong(), event.getChannel().asTextChannel().getIdLong(), false));
 
-        this.scheduler.enqueue(track);
+        this.scheduler.enqueue(track, this.playAsFirst);
 
         event.getHook().sendMessage("Song zur Wiedergabeliste hinzugefügt: **`" + track.getInfo().getTitle() + "`**").queue();
     }
@@ -30,7 +32,10 @@ public class AudioLoader extends AbstractAudioLoadResultHandler {
     @Override
     public void onPlaylistLoaded(@NotNull PlaylistLoaded result) {
         final int trackCount = result.getTracks().size();
-
+        CustomTrackData userData = new CustomTrackData(event.getUser().getIdLong(), event.getChannel().asTextChannel().getIdLong(), false);
+        for(Track t : result.getTracks()){
+            t.setUserData(userData);
+        }
         this.scheduler.enqueuePlaylist(result.getTracks());
 
         event.getHook()
@@ -46,8 +51,8 @@ public class AudioLoader extends AbstractAudioLoadResultHandler {
             msg = "Keine Ergebnisse gefunden für folgende Eingabe: " + input;
         } else {
             final Track track = tracks.get(0);
-            track.setUserData(new CustomTrackData(this.input, event.getUser().getName(), event.getChannel().asTextChannel().getIdLong()));
-            this.scheduler.enqueue(track);
+            track.setUserData(new CustomTrackData(event.getUser().getIdLong(), event.getChannel().asTextChannel().getIdLong(), false));
+            this.scheduler.enqueue(track, this.playAsFirst);
             msg = "Song zur Wiedergabeliste hinzugefügt: **`" + track.getInfo().getTitle() + "`**";
         }
         event.getHook().sendMessage(msg).queue();

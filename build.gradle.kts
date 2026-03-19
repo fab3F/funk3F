@@ -12,12 +12,15 @@ repositories {
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.6.1")
-    implementation("dev.arbjerg:lavalink-client:3.2.0")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.3")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.0")
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    implementation("net.dv8tion:JDA:6.3.2") {
+        exclude(module="opus-java")
+        exclude(module="tink")
+    }
+    implementation("dev.arbjerg:lavalink-client:3.4.0")
+    implementation("tools.jackson.core:jackson-databind:3.1.0")
+    implementation("tools.jackson.dataformat:jackson-dataformat-yaml:3.1.0")
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("ch.qos.logback:logback-classic:1.5.32")
 }
 
 tasks.test {

@@ -1,3 +1,4 @@
-defaultautoplaysong: "Never gonna give you up"
-defaultvolume: "50"
-volumenormalization: "false"
+defaultAutoplay: "false"
+defaultAutoplaySong: "Never gonna give you up"
+defaultVolume: "50"
+volumeNormalization: "false"

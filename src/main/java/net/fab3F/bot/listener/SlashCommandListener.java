@@ -5,19 +5,25 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
-import net.fab3F.Main;
+import net.fab3F.bot.CommandManager;
 
 
 public class SlashCommandListener extends ListenerAdapter {
 
+    private final CommandManager cm;
+
+    public SlashCommandListener(CommandManager cm){
+        this.cm = cm;
+    }
+
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-       Main.bot.commandManager.perform(event);
+       cm.perform(event);
     }
 
     @Override
     public void onReady(ReadyEvent event) {
-        Main.bot.commandManager.updateCommands(event.getJDA());
+        cm.updateCommands(event.getJDA());
     }
 
     @Override

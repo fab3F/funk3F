@@ -5,27 +5,34 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.fab3F.Main;
 import net.fab3F.bot.ServerCommand;
+import net.fab3F.bot.music.MusicHandler;
 import net.fab3F.bot.music.VoiceHelper;
 import net.fab3F.bot.perm.PermissionGroup;
 
 
-public class PlayCmd implements ServerCommand {
+public class PlayMusicCmd implements ServerCommand {
+    private final MusicHandler musicHandler;
+
+    public PlayMusicCmd(MusicHandler mH){
+        this.musicHandler = mH;
+    }
+
     @Override
     public boolean peformCommand(SlashCommandInteractionEvent e) {
-        if(e.getOption("title") == null || e.getMember() == null || e.getGuild() == null){
+        if(e.getOption("title") == null || e.getGuild() == null){
             return false;
         }
 
         Guild g = e.getGuild();
 
         // Join VC (or not)
-        if(!VoiceHelper.joinHelper(e.getMember(), g.getSelfMember(), e.getJDA())){
+        if(!VoiceHelper.joinHelper(e.getMember(), g.getSelfMember(), e.getJDA(), true)){
             return false;
         }
 
         final String identifier = e.getOption("title").getAsString();
 
-        Main.bot.getMusicHelper().addContent(identifier, e, false);
+        musicHandler.addContent(identifier, e, false);
 
         return true;
     }
