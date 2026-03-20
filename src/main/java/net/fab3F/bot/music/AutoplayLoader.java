@@ -3,6 +3,9 @@ package net.fab3F.bot.music;
 
 import net.fab3F.ConfigWorker;
 import net.fab3F.Main;
+import org.slf4j.LoggerFactory;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -28,7 +31,7 @@ public class AutoplayLoader {
         String vId = lastUrl.replaceAll("^(?:https?://)?(?:www\\.)?(?:youtube\\.com/.*v=|youtu\\.be/)([a-zA-Z0-9_-]{11}).*$", "$1");
         this.musicHandler.addAutoplayContent("https://www.youtube.com/watch?v=" + vId + "&list=RD" + vId, guildId, channelId);
     }
-/*
+
     public void loadTop30(long guildId, long channelId){
         String searchQuery = String.format("method=chart.gettoptracks&api_key=%s&format=json&limit=30", lastFmKey);
         String searchUrl = base + "?" + searchQuery;
@@ -39,7 +42,7 @@ public class AutoplayLoader {
         try {
             jsonResponse = getJsonResponse(searchUrl, mapper);
         } catch (Exception e) {
-            logger.error("43: Exception lastFM: " + e.getMessage());
+            LoggerFactory.getLogger(AutoplayLoader.class).error("43: Exception lastFM: " + e.getMessage());
             return;
         }
         JsonNode trackArray = jsonResponse.get("tracks").get("track");
@@ -66,6 +69,6 @@ public class AutoplayLoader {
 
         return mapper.readTree(content.toString());
     }
-*/
+
 
 }

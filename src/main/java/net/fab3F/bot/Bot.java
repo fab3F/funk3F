@@ -36,6 +36,7 @@ public class Bot {
         }
         this.cw = cw;
         this.pW = new PermissionWorker();
+
         long botId = Helpers.getUserIdFromToken(token);
         this.musicHandler = new MusicHandler(botId, cw);
         this.commandManager = new CommandManager(cw, pW, this.musicHandler);

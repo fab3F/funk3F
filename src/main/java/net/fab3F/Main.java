@@ -1,5 +1,6 @@
 package net.fab3F;
 
+import dev.arbjerg.lavalink.client.Helpers;
 import net.fab3F.bot.Bot;
 
 import org.slf4j.Logger;
@@ -39,7 +40,12 @@ public class Main {
 
         logger = LoggerFactory.getLogger(Main.class);
         logger.info("Started Main and now Starting Bot");
-        bot = new Bot(botConfig.getToken(), configW);
+        try{
+            bot = new Bot(botConfig.getToken(), configW);
+        }catch(IllegalArgumentException ex){
+            System.out.println("[ERROR] Exception: " + ex.getMessage());
+        }
+
     }
 
     // set region (auch für yt search)
