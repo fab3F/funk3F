@@ -7,6 +7,7 @@ import tools.jackson.dataformat.yaml.YAMLMapper;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,8 +83,7 @@ public class ConfigWorker {
             this.current = config;
             return config;
         } catch (JacksonException e) {
-            System.out.println("[LOGGER-NOT-INITIALIZED] Error while reading bot config. Make sure the config file is correct. Path: " + this.configPath + "config.yml\n" + e.getMessage());
-            return null;
+            throw new IllegalArgumentException("Error while reading bot config. Make sure the config file is correct. Path: " + this.configPath + "\\config.yml\n" + e.getMessage());
         }
     }
 
@@ -155,8 +155,8 @@ public class ConfigWorker {
         private String lavalinkPassword;
 
         // Default values
-        private List<String> adminIds = List.of("502823513443401730");
-        private List<String> activity = Arrays.asList("watching", "fab3F Homepage");
+        private final List<String> adminIds = List.of("502823513443401730");
+        private final List<String> activity = Arrays.asList("watching", "fab3F Homepage");
 
 
         public void validate(){
