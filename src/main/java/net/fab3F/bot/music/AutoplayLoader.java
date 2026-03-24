@@ -42,13 +42,13 @@ public class AutoplayLoader {
         try {
             jsonResponse = getJsonResponse(searchUrl, mapper);
         } catch (Exception e) {
-            LoggerFactory.getLogger(AutoplayLoader.class).error("43: Exception lastFM: " + e.getMessage());
+            LoggerFactory.getLogger(AutoplayLoader.class).error("43: Exception lastFM: {}", e.getMessage());
             return;
         }
         JsonNode trackArray = jsonResponse.get("tracks").get("track");
         for (JsonNode track : trackArray) {
-            String name = track.get("name").asText();
-            String artist = track.get("artist").get("name").asText();
+            String name = track.get("name").asString();
+            String artist = track.get("artist").get("name").asString();
             this.musicHandler.addAutoplayContent(artist + " - " + name, guildId, channelId);
         }
     }

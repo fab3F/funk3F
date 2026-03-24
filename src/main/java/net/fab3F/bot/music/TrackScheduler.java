@@ -1,6 +1,5 @@
 package net.fab3F.bot.music;
 
-import dev.arbjerg.lavalink.client.player.LavalinkPlayer;
 import dev.arbjerg.lavalink.client.player.Track;
 import dev.arbjerg.lavalink.protocol.v4.Message;
 import dev.arbjerg.lavalink.protocol.v4.TrackInfo;
@@ -24,6 +23,7 @@ public class TrackScheduler {
     private int volume;
     public boolean isAutoplay;
     private final AtomicBoolean isStarting = new AtomicBoolean(false);
+    private Track currentTrack = null;
 
     public TrackScheduler(long guildId, MusicHandler mH) {
         this.musicHandler = mH;
@@ -39,53 +39,35 @@ public class TrackScheduler {
     }
 
     public synchronized void enqueue(Track track, boolean playAsFirst) {
-        this.musicHandler.getPlayer(guildId).ifPresentOrElse(
-                (player) -> {
-                    // nothing plays and no song is starting
-                    if (player.getTrack() == null && !this.isStarting.get()) {
-                        this.startTrack(track, false);
-                    } else {
-                        if(playAsFirst){
-                            this.queue.addFirst(track);
-                        } else{
-                            this.clearAutoplay();
-                            this.queue.offer(track);
-                        }
-                    }
-                },
-                () -> {
-                    // check for lock
-                    if (!this.isStarting.get()) {
-                        this.startTrack(track, false);
-                    } else {
-                        this.queue.offer(track);
-                    }
-                }
-        );
+        CustomTrackData data = track.getUserData(CustomTrackData.class);
+        boolean isAutoplayTrack = (data != null && data.isAutoplay());
+
+        if (playAsFirst) {
+            this.queue.addFirst(track);
+        } else {
+            if (!isAutoplayTrack) {
+                this.clearAutoplay();
+            }
+            this.queue.offer(track);
+        }
+        this.processQueue();
     }
 
-    public void enqueuePlaylist(List<Track> tracks) {
+    public synchronized void enqueuePlaylist(List<Track> tracks) {
+        if(tracks.isEmpty()){
+            return;
+        }
+        if(!(tracks.get(0).getUserData(CustomTrackData.class) != null && tracks.get(0).getUserData(CustomTrackData.class).isAutoplay())){
+            this.clearAutoplay();
+        }
         this.queue.addAll(tracks);
-
-        this.musicHandler.getPlayer(guildId).ifPresentOrElse(
-                (player) -> {
-                    // nothing plays and no song is starting
-                    if (player.getTrack() == null && !this.isStarting.get()) {
-                        this.startTrack(this.queue.poll(), false);
-                    }
-                },
-                () -> {
-                    // check for lock
-                    if (!this.isStarting.get()) {
-                        this.startTrack(this.queue.poll(), false);
-                    }
-                }
-        );
+        this.processQueue();
     }
 
 
 
     public void onTrackStart(Track track) {
+        this.currentTrack = track;
         this.isStarting.set(false);
 
         this.lastPlayedTracks.add(track);
@@ -98,17 +80,17 @@ public class TrackScheduler {
     }
 
     public void onTrackEnd(Track lastTrack, Message.EmittedEvent.TrackEndEvent.AudioTrackEndReason endReason) {
+        this.currentTrack = null;
         this.isStarting.set(false);
 
         if(!endReason.getMayStartNext())
             return;
 
         if(isRepeat) {
-            this.startTrack(lastTrack.makeClone(), false);
-            return;
-        } else {
-            this.startTrack(this.queue.poll(), false);
+            this.queue.addFirst(lastTrack.makeClone());
         }
+
+        this.processQueue();
 
         if(this.queue.isEmpty() && this.isAutoplay){
             this.startAutoplay(-1);
@@ -143,22 +125,15 @@ public class TrackScheduler {
 
     public void startAutoplay(long channelId){
         // check if song is playing
-
-        //this.musicHandler.getPlayer(guildId)
-        //        .map(player -> player.getTrack() != null)
-        //        .defaultIfEmpty(false)                    // falls kein Player gefunden wurde
-        //        .subscribe(isPlaying -> {
-        //            return;
-        //        });
-
-
-        boolean isPlaying = this.musicHandler.getPlayer(guildId).map(player -> player.getTrack() != null).orElse(false);
-        if(isPlaying || !this.queue.isEmpty()){
+        if(this.currentTrack != null || this.isStarting.get() || !this.queue.isEmpty()){
             return;
         }
+
         if(!lastPlayedTracks.isEmpty()){
             Track last = lastPlayedTracks.get(lastPlayedTracks.size()-1);
-            this.musicHandler.autoplayLoader.loadYtRecommendation(this.guildId, last.getUserData(CustomTrackData.class).channelId(), last.getInfo().getUri());
+            if (last.getInfo().getUri() != null) {
+                this.musicHandler.autoplayLoader.loadYtRecommendation(this.guildId, last.getUserData(CustomTrackData.class).channelId(), last.getInfo().getUri());
+            }
         } else if (channelId != -1){
             this.musicHandler.autoplayLoader.loadTop30(this.guildId, channelId);
         }
@@ -174,6 +149,15 @@ public class TrackScheduler {
             CustomTrackData data = track.getUserData(CustomTrackData.class);
             return data != null && data.isAutoplay();
         });
+    }
+
+    private synchronized void processQueue() {
+        // Already starting
+        if (this.isStarting.get() || this.currentTrack != null) return;
+
+        if (!this.queue.isEmpty()) {
+            this.startTrack(this.queue.poll(), false);
+        }
     }
 
     private void startTrack(Track track, boolean skipping) {
@@ -198,10 +182,13 @@ public class TrackScheduler {
                         .setTrack(track)
                         .setVolume(this.volume)
                         .subscribe(
-                                player -> {}, // Erfolg (onNext)
-                                error -> this.isStarting.set(false) // <-- LOCK LÖSEN falls Lavalink crasht
+                                player -> {}, // success (onNext)
+                                error -> {
+                                    this.isStarting.set(false); // remove lock
+                                    this.processQueue(); // try next song
+                                }
                         ),
-                () -> this.isStarting.set(false) // <-- LOCK LÖSEN falls kein Link existiert
+                () -> this.isStarting.set(false) // remove lock id link doesnt exist
         );
     }
 }

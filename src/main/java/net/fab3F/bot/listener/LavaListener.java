@@ -27,14 +27,20 @@ public class LavaListener {
 
     public void handleTrackException(TrackExceptionEvent event){
         logger.debug("[Lava-Listener] Node '{}': Track exception -> {} (error: {})", event.getNode().getName(), event.getTrack().getInfo().getTitle(), event.getException().getMessage());
+
+        // TODO: Play next song or stop
     }
 
     public void handleTrackStuck(TrackStuckEvent event){
         logger.debug("[Lava-Listener] Node '{}': Track stuck -> {} (thresholdMs: {})", event.getNode().getName(), event.getTrack().getInfo().getTitle(), event.getThresholdMs());
+
+        // TODO: Play next song or stop
     }
 
     public void handleWebsocketClosed(WebSocketClosedEvent event){
         logger.debug("[Lava-Listener] Node '{}': WebSocket closed (code: {}, reason: {}, byRemote: {})", event.getNode().getName(), event.getCode(), event.getReason(), event.getByRemote());
+
+        // TODO: stop
     }
 
 

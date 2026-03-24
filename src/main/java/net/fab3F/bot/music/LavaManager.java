@@ -58,6 +58,13 @@ public class LavaManager {
         this.client.on(dev.arbjerg.lavalink.client.event.ReadyEvent.class).subscribe((event) -> {
             final LavalinkNode node = event.getNode();
             logger.info("[Lava-Listener] Node ready: {} - Session id is: {}", node.getName(), event.getSessionId());
+
+            if(!event.getResumed()){
+                logger.warn("[Lava-Listener] Node {} had a hard reset. Resetting Players!", node.getName());
+                // TODO reset einbauen
+
+            }
+
         });
 
         this.client.on(StatsEvent.class).subscribe((event) -> {

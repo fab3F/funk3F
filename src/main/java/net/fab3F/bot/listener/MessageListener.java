@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fab3F.ConfigWorker;
 import net.fab3F.Main;
 import net.fab3F.bot.music.MusicHandler;
+import net.fab3F.bot.music.VoiceHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,7 @@ public class MessageListener extends ListenerAdapter {
                 }
             } else if (msg.startsWith("autoplay3243423")) {
                 logger.debug("Autoplay: {}", msg);
+                VoiceHelper.joinHelper(event.getMember(), event.getGuild().getSelfMember(), event.getJDA(), true);
                 mH.getOrCreateTrackScheduler(event.getGuild().getIdLong()).startAutoplay(event.getChannel().asTextChannel().getIdLong());
             } else if (msg.startsWith("sktip2134234")) {
                 logger.debug("Skip: {}", msg);
