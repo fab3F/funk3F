@@ -10,9 +10,9 @@ import java.util.Set;
 
 
 public class PermissionWorker {
-    private final Logger logger = LoggerFactory.getLogger(PermissionWorker.class);
+    private static final Logger logger = LoggerFactory.getLogger(PermissionWorker.class);
 
-    public String hasPermission(Member member, PermissionGroup permissionGroup) {
+    public static String hasPermission(Member member, PermissionGroup permissionGroup) {
         Set<Permission> requiredPermissions = PermissionConfig.PERMISSIONS_MAP.get(permissionGroup);
         if (requiredPermissions == null) {
             logger.error("11: requiredPermissions is null for this botPermission: {}", permissionGroup.name());

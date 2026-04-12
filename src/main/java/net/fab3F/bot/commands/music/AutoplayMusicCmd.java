@@ -1,18 +1,18 @@
-package net.fab3F.bot.commands;
+package net.fab3F.bot.commands.music;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.fab3F.bot.ServerCommand;
+import net.fab3F.bot.ServerMusicCommand;
 import net.fab3F.bot.music.MusicHandler;
 import net.fab3F.bot.music.TrackScheduler;
 import net.fab3F.bot.music.VoiceHelper;
 import net.fab3F.bot.perm.PermissionGroup;
 
-public class AutoplayMusicCmd implements ServerCommand {
-    private final MusicHandler musicHandler;
+public class AutoplayMusicCmd extends ServerMusicCommand {
 
-    public AutoplayMusicCmd(MusicHandler mH){
-        this.musicHandler = mH;
+
+    public AutoplayMusicCmd(MusicHandler musicHandler) {
+        super(musicHandler);
     }
 
     @Override
@@ -27,15 +27,15 @@ public class AutoplayMusicCmd implements ServerCommand {
         if(!VoiceHelper.joinHelper(e.getMember(), g.getSelfMember(), e.getJDA(), true)){
             return false;
         }
-        TrackScheduler scheduler = musicHandler.getOrCreateTrackScheduler(e.getGuild().getIdLong());
+        TrackScheduler scheduler = musicHandler.getOrCreateGuildMusicHandler(g.getIdLong()).getScheduler();
 
-        if(scheduler.isAutoplay){
+        if(scheduler.isAutoplay()){
             scheduler.stopAutoplay();
             e.reply("Autoplay wurde deaktiviert.").queue();
             return true;
         }
 
-        scheduler.isAutoplay = true;
+        scheduler.setAutoplay(true);
         scheduler.startAutoplay(e.getChannel().asTextChannel().getIdLong());
         e.reply("Autoplay wurde aktiviert. Nachdem die Wiedergabeliste abgespielt wurde, werden empfohlene Songs abgespielt.").queue();
         return true;
@@ -43,18 +43,8 @@ public class AutoplayMusicCmd implements ServerCommand {
     }
 
     @Override
-    public boolean isOnlyForServer() {
-        return true;
-    }
-
-    @Override
     public PermissionGroup getUserPermission() {
         return PermissionGroup.VOICE_ADVANCED;
-    }
-
-    @Override
-    public PermissionGroup getBotPermission() {
-        return PermissionGroup.BOT_VOICE;
     }
 
     @Override

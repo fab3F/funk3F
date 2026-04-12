@@ -20,4 +20,4 @@ logPath: "logs" # logs folder
 serverConfigPath: "server" # config folder for server config
 publicYtApiUrl: "https://www.youtube.com/youtubei/v1/player?key="
 publicYtApiKey: "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
-volumescale: "0.1" # loudness normalization scale
+volumeScale: "0.1" # loudness normalization scale

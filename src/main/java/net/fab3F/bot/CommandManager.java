@@ -5,11 +5,9 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.fab3F.ConfigWorker;
-import net.fab3F.Main;
-import net.fab3F.bot.commands.AutoplayMusicCmd;
+import net.fab3F.bot.commands.music.*;
 import net.fab3F.bot.commands.ConfigCmd;
 import net.fab3F.bot.commands.PingCmd;
-import net.fab3F.bot.commands.PlayMusicCmd;
 import net.fab3F.bot.music.MusicHandler;
 import net.fab3F.bot.perm.PermissionGroup;
 import net.fab3F.bot.perm.PermissionWorker;
@@ -25,23 +23,29 @@ public class CommandManager {
     public ConcurrentHashMap<String, ServerCommand> commands;
 
     private final ConfigWorker cw;
-    private final PermissionWorker pW;
 
     private final Logger logger = LoggerFactory.getLogger(CommandManager.class);
 
-    public CommandManager(ConfigWorker cw, PermissionWorker pW, MusicHandler mH) {
+    public CommandManager(ConfigWorker cw, MusicHandler mH) {
 
         this.commands = new ConcurrentHashMap<>();
 
         this.cw = cw;
-        this.pW = pW;
 
-        this.commands.put("ping", new PingCmd());
-        this.commands.put("play", new PlayMusicCmd(mH));
-        this.commands.put("autoplay", new AutoplayMusicCmd(mH));
         this.commands.put("config", new ConfigCmd(cw));
+        this.commands.put("ping", new PingCmd());
+
+        this.commands.put("play", new PlayMusicCmd(mH));
+        this.commands.put("playnow", new PlaynowMusicCmd(mH));
+        this.commands.put("stop", new StopMusicCmd(mH));
+        this.commands.put("autoplay", new AutoplayMusicCmd(mH));
+        this.commands.put("volume", new VolumeMusicCmd(mH));
+        this.commands.put("skip", new SkipMusicCmd(mH));
+
+
 
         /*
+
         this.commands.put("help", new HelpCmd());
         this.commands.put("clear", new ClearCmd());
 
@@ -90,7 +94,7 @@ public class CommandManager {
 
         if(e.getGuild() != null){
             PermissionGroup neededBotPerm = cmd.getBotPermission();
-            String permCheck1 = pW.hasPermission(e.getGuild().getSelfMember(), neededBotPerm);
+            String permCheck1 = PermissionWorker.hasPermission(e.getGuild().getSelfMember(), neededBotPerm);
             if(!permCheck1.equals("_TRUE_")){
                 e.reply("Dem Bot fehlt die Berechtigungen:\n" + permCheck1.replaceFirst("_FALSE_", "")).setEphemeral(true).queue();
                 return;
@@ -99,7 +103,7 @@ public class CommandManager {
 
 
         PermissionGroup neededUserPerm = cmd.getUserPermission();
-        String permCheck2 = pW.hasPermission(e.getMember(), neededUserPerm);
+        String permCheck2 = PermissionWorker.hasPermission(e.getMember(), neededUserPerm);
         if(!permCheck2.equals("_TRUE_") && !cw.getBotConfig().getAdminIds().contains(e.getUser().getId())){
             e.reply("Um diesen Befehl auszuführen ist folgende Berechtigungsgruppe erforderlich:\n" +
                     neededUserPerm.name() + " - " + neededUserPerm.getDescription() + "\n" +
@@ -131,7 +135,7 @@ public class CommandManager {
             try {
                 e.reply(getUsage(cmd, cmdName)).setEphemeral(true).queue();
             } catch (Exception ex) {
-                logger.error("10: Bei der Ausführung eines Befehls ist ein unbekannter Fehler aufgetreten: " + e.getCommandString() + "\nChannel: " + e.getChannel().getName() + "\nFehlermeldung: " + ex.getMessage());
+                logger.error("10: Bei der Ausführung eines Befehls ist ein unbekannter Fehler aufgetreten: {}\nChannel: {}\nFehlermeldung: {}", e.getCommandString(), e.getChannel().getName(), ex.getMessage());
             }
         }
 

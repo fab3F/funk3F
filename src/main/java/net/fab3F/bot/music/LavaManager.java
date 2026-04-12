@@ -20,18 +20,16 @@ import java.util.function.Consumer;
 public class LavaManager {
 
     private final Logger logger = LoggerFactory.getLogger(LavaManager.class);
-    private final MusicHandler musicHandler;
 
     private final LavalinkClient client;
     private final Map<Class<? extends EmittedEvent>, Consumer<EmittedEvent>> handlers = new HashMap<>();
     private final LavaListener lavaListener;
 
-    public LavaManager(long botId, MusicHandler mH){
-        this.musicHandler = mH;
+    public LavaManager(long botId, MusicHandler mH, ConfigWorker cw){
         this.lavaListener = new LavaListener(mH);
         this.client = new LavalinkClient(botId);
         this.client.getLoadBalancer().addPenaltyProvider(new VoiceRegionPenaltyProvider());
-        this.registerLavalinkNode();
+        this.registerLavalinkNode(cw);
         this.registerLavalinkListeners();
     }
 
@@ -40,8 +38,7 @@ public class LavaManager {
     }
 
 
-    private void registerLavalinkNode() {
-        ConfigWorker cw = this.musicHandler.getConfigWorker();
+    private void registerLavalinkNode(ConfigWorker cw) {
         NodeOptions options = new NodeOptions.Builder()
                 .setName("funk3F-Node")
                 .setServerUri(URI.create(String.format("ws://%s:%s",
@@ -60,7 +57,7 @@ public class LavaManager {
             logger.info("[Lava-Listener] Node ready: {} - Session id is: {}", node.getName(), event.getSessionId());
 
             if(!event.getResumed()){
-                logger.warn("[Lava-Listener] Node {} had a hard reset. Resetting Players!", node.getName());
+                logger.warn("[Lava-Listener] Node {} had a hard reset. Resetting Players!", node.getName()); // Meldung wird aktuell auch beim start angezeigt
                 // TODO reset einbauen
 
             }

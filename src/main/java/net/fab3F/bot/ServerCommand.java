@@ -35,7 +35,5 @@ public interface ServerCommand {
             this.required = required;
         }
     }
-
-
 }
 

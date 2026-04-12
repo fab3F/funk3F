@@ -1,20 +1,18 @@
-package net.fab3F.bot.commands;
+package net.fab3F.bot.commands.music;
 
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.fab3F.Main;
-import net.fab3F.bot.ServerCommand;
+import net.fab3F.bot.ServerMusicCommand;
 import net.fab3F.bot.music.MusicHandler;
 import net.fab3F.bot.music.VoiceHelper;
 import net.fab3F.bot.perm.PermissionGroup;
 
+import java.util.Objects;
 
-public class PlayMusicCmd implements ServerCommand {
-    private final MusicHandler musicHandler;
 
-    public PlayMusicCmd(MusicHandler mH){
-        this.musicHandler = mH;
+public class PlaynowMusicCmd extends ServerMusicCommand {
+    public PlaynowMusicCmd(MusicHandler musicHandler) {
+        super(musicHandler);
     }
 
     @Override
@@ -23,33 +21,19 @@ public class PlayMusicCmd implements ServerCommand {
             return false;
         }
 
-        Guild g = e.getGuild();
-
         // Join VC (or not)
-        if(!VoiceHelper.joinHelper(e.getMember(), g.getSelfMember(), e.getJDA(), true)){
+        if(!VoiceHelper.joinHelper(e.getMember(), e.getGuild().getSelfMember(), e.getJDA(), true)){
             return false;
         }
 
-        final String identifier = e.getOption("title").getAsString();
+        final String identifier = Objects.requireNonNull(e.getOption("title")).getAsString();
 
-        musicHandler.addContent(identifier, e, false);
-
-        return true;
-    }
-
-    @Override
-    public boolean isOnlyForServer() {
-        return true;
+        return musicHandler.addContent(identifier, e, true);
     }
 
     @Override
     public PermissionGroup getUserPermission() {
         return PermissionGroup.ADMIN;
-    }
-
-    @Override
-    public PermissionGroup getBotPermission() {
-        return PermissionGroup.BOT_VOICE;
     }
 
     @Override
@@ -62,12 +46,12 @@ public class PlayMusicCmd implements ServerCommand {
 
     @Override
     public String getDescription() {
-        return "Spiele einen Song oder eine Playlist ab";
+        return "Spiele einen Song sofort als nächsten ab (Nicht für Playlists verfügbar)";
     }
 
     @Override
     public Option[] getOptions() {
-        return new ServerCommand.Option[]{new Option(OptionType.STRING, "title", "Der Name oder die URL des Songs oder eine Spotify/YouTube Playlist", true)};
+        return new Option[]{new Option(OptionType.STRING, "title", "Der Name oder die URL des Songs oder eine Spotify/YouTube Playlist", true)};
     }
 
 }

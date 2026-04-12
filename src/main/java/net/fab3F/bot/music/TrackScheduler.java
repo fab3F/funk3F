@@ -1,9 +1,7 @@
 package net.fab3F.bot.music;
 
 import dev.arbjerg.lavalink.client.player.Track;
-import dev.arbjerg.lavalink.protocol.v4.Message;
-import dev.arbjerg.lavalink.protocol.v4.TrackInfo;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.Guild;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,28 +12,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TrackScheduler {
 
-    public final long guildId;
     private final Logger logger = LoggerFactory.getLogger(TrackScheduler.class);
-    public final MusicHandler musicHandler;
+    private final GuildMusicHandler handler;
+
     private final ConcurrentLinkedDeque<Track> queue = new ConcurrentLinkedDeque<>();
     private final List<Track> lastPlayedTracks = new ArrayList<>();
     private boolean isRepeat = false;
-    private int volume;
-    public boolean isAutoplay;
+    private boolean isAutoplay;
+
     private final AtomicBoolean isStarting = new AtomicBoolean(false);
     private Track currentTrack = null;
 
-    public TrackScheduler(long guildId, MusicHandler mH) {
-        this.musicHandler = mH;
-        this.guildId = guildId;
-        try{
-            this.volume = Integer.parseInt(mH.getConfigWorker().getServerConfig(Long.toString(this.guildId)).get("default_volume"));
-        } catch (NumberFormatException ex){
-            this.volume = 35;
-            logger.error("30: Volume-Konfiguration inkorrekt für: {}", this.guildId);
-        }
-        this.isAutoplay = Boolean.parseBoolean(mH.getConfigWorker().getServerConfig(String.valueOf(this.guildId)).get("default_autoplay"));
+    public TrackScheduler(GuildMusicHandler handler, boolean isAutoplay) {
+        this.handler = handler;
+        this.isAutoplay = isAutoplay;
+    }
 
+    public Guild getGuild(){
+        return this.handler.getGuild();
     }
 
     public synchronized void enqueue(Track track, boolean playAsFirst) {
@@ -65,25 +59,17 @@ public class TrackScheduler {
     }
 
 
-
     public void onTrackStart(Track track) {
         this.currentTrack = track;
         this.isStarting.set(false);
-
         this.lastPlayedTracks.add(track);
-        TrackInfo info = track.getInfo();
-        String msg = "Jetzt spielt: **`" + info.getTitle() + "`** von **`" + info.getAuthor() + "`** [" + MusicHandler.calcDuration((int)info.getLength()) + "]";
-        TextChannel channel = musicHandler.resolveTextChannel(this.guildId, track.getUserData(CustomTrackData.class).channelId());
-        if (channel != null) {
-            channel.sendMessage(msg).queue();
-        }
     }
 
-    public void onTrackEnd(Track lastTrack, Message.EmittedEvent.TrackEndEvent.AudioTrackEndReason endReason) {
+    public void onTrackEnd(Track lastTrack, boolean mayStartNext) {
         this.currentTrack = null;
         this.isStarting.set(false);
 
-        if(!endReason.getMayStartNext())
+        if(!mayStartNext)
             return;
 
         if(isRepeat) {
@@ -97,9 +83,13 @@ public class TrackScheduler {
         }
     }
 
-    public void skip(){
+    public boolean skip(){
+        if(this.currentTrack == null)
+            return false;
+
         this.startTrack(this.queue.poll(), true);
         this.isRepeat = false;
+        return true;
     }
 
     public boolean isRepeat() {
@@ -108,19 +98,6 @@ public class TrackScheduler {
 
     public void changeRepeat() {
         isRepeat = !isRepeat;
-    }
-
-    public void setVolume(int volume){
-        this.volume = Math.min(Math.max(volume, 0), 100);
-        this.musicHandler.getLink(guildId).ifPresent(
-                (link) -> link.createOrUpdatePlayer()
-                        .setVolume(this.volume)
-                        .subscribe()
-        );
-    }
-
-    public int getVolume(){
-        return volume;
     }
 
     public void startAutoplay(long channelId){
@@ -132,16 +109,24 @@ public class TrackScheduler {
         if(!lastPlayedTracks.isEmpty()){
             Track last = lastPlayedTracks.get(lastPlayedTracks.size()-1);
             if (last.getInfo().getUri() != null) {
-                this.musicHandler.autoplayLoader.loadYtRecommendation(this.guildId, last.getUserData(CustomTrackData.class).channelId(), last.getInfo().getUri());
+                AutoplayLoader.getLoader().loadYtRecommendation(this.getGuild().getIdLong(), last.getUserData(CustomTrackData.class).channelId(), last.getInfo().getUri());
             }
         } else if (channelId != -1){
-            this.musicHandler.autoplayLoader.loadTop30(this.guildId, channelId);
+            AutoplayLoader.getLoader().loadTop30(this.getGuild().getIdLong(), channelId);
         }
     }
 
     public void stopAutoplay(){
         this.isAutoplay = false;
         this.clearAutoplay();
+    }
+
+    public boolean isAutoplay(){
+        return this.isAutoplay;
+    }
+
+    public void setAutoplay(boolean autoplay){
+        this.isAutoplay = autoplay;
     }
 
     private void clearAutoplay(){
@@ -177,10 +162,10 @@ public class TrackScheduler {
         this.isStarting.set(true);
 
         // Set the new track
-        this.musicHandler.getLink(guildId).ifPresentOrElse(
+        this.handler.getLink().ifPresentOrElse(
                 (link) -> link.createOrUpdatePlayer()
                         .setTrack(track)
-                        .setVolume(this.volume)
+                        .setVolume(this.handler.getVolume())
                         .subscribe(
                                 player -> {}, // success (onNext)
                                 error -> {

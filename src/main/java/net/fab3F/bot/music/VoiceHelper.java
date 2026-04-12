@@ -1,20 +1,11 @@
 package net.fab3F.bot.music;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 
 public class VoiceHelper {
-
-    public static void stopMusicInGuild(Guild g) {
-        // check if there is überhaupt music running in this guild
-        try {
-            //Bot.instance.getPM().stopGuildMusicManager(g.getId());
-        } catch (NullPointerException ignored){}
-    }
-
 
     // Returns true if in same voice channel or if bot joined the channel (only does that if doJoin is true)
     public static boolean joinHelper(Member member, Member bot, JDA jda, boolean doJoin){

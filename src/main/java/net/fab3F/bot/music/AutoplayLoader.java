@@ -13,18 +13,24 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class AutoplayLoader {
+    private static AutoplayLoader loader = null;
 
     private final String userAgent;
     private final String base;
     private final String lastFmKey;
     private final MusicHandler musicHandler;
 
-    public AutoplayLoader(MusicHandler musicHandler){
+    public AutoplayLoader(MusicHandler musicHandler, ConfigWorker cw){
         this.userAgent = "Music Bot/" + Main.VERSION + " funk3F";
-        ConfigWorker.BotConfig botConfig = musicHandler.getConfigWorker().getBotConfig();
+        ConfigWorker.BotConfig botConfig = cw.getBotConfig();
         this.base = botConfig.getLastFmBase();
         this.lastFmKey = botConfig.getLastFmKey();
         this.musicHandler = musicHandler;
+        loader = this;
+    }
+
+    public static AutoplayLoader getLoader(){
+        return loader;
     }
 
     public void loadYtRecommendation(long guildId, long channelId, String lastUrl){
@@ -69,6 +75,4 @@ public class AutoplayLoader {
 
         return mapper.readTree(content.toString());
     }
-
-
 }

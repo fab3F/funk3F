@@ -52,10 +52,10 @@ public class MessageListener extends ListenerAdapter {
             } else if (msg.startsWith("autoplay3243423")) {
                 logger.debug("Autoplay: {}", msg);
                 VoiceHelper.joinHelper(event.getMember(), event.getGuild().getSelfMember(), event.getJDA(), true);
-                mH.getOrCreateTrackScheduler(event.getGuild().getIdLong()).startAutoplay(event.getChannel().asTextChannel().getIdLong());
+                //mH.getOrCreateTrackScheduler(event.getGuild().getIdLong()).startAutoplay(event.getChannel().asTextChannel().getIdLong());
             } else if (msg.startsWith("sktip2134234")) {
                 logger.debug("Skip: {}", msg);
-                mH.getOrCreateTrackScheduler(event.getGuild().getIdLong()).skip();
+                //mH.getOrCreateTrackScheduler(event.getGuild().getIdLong()).skip();
             }
         }
     }

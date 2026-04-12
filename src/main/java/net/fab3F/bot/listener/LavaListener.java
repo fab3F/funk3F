@@ -2,7 +2,13 @@ package net.fab3F.bot.listener;
 
 import dev.arbjerg.lavalink.client.event.*;
 import dev.arbjerg.lavalink.client.player.Track;
+import dev.arbjerg.lavalink.protocol.v4.Message;
+import dev.arbjerg.lavalink.protocol.v4.TrackInfo;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.fab3F.bot.music.CustomTrackData;
 import net.fab3F.bot.music.MusicHandler;
+import net.fab3F.bot.music.TrackScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,24 +22,33 @@ public class LavaListener {
 
     public void handleTrackStart(TrackStartEvent event){
         Track track = event.getTrack();
-        logger.debug("[Lava-Listener] Node: '{}'; Guild: '{} ({})' ; Track started -> {}", event.getNode().getName(), mH.getShardManager().getGuildById(event.getGuildId()).getName(), event.getGuildId(), track.getInfo().getTitle());
-        mH.getOrCreateTrackScheduler(event.getGuildId()).onTrackStart(track);
+        TrackScheduler scheduler = mH.getOrCreateGuildMusicHandler(event.getGuildId()).getScheduler();
+        Guild guild = scheduler.getGuild();
+        logger.debug("[Lava-Listener] Node: '{}'; Guild: '{} ({})' ; Track started -> {}", event.getNode().getName(), guild.getName(), guild.getId(), track.getInfo().getTitle());
+
+        scheduler.onTrackStart(track);
+
+        TrackInfo info = track.getInfo();
+        String msg = "Jetzt spielt: **`" + info.getTitle() + "`** von **`" + info.getAuthor() + "`** [" + MusicHandler.calcDuration((int)info.getLength()) + "]";
+        TextChannel channel = guild.getChannelById(TextChannel.class, track.getUserData(CustomTrackData.class).channelId());
+        if (channel != null) {
+            channel.sendMessage(msg).queue();
+        }
     }
 
     public void handleTrackEnd(TrackEndEvent event){
         logger.debug("[Lava-Listener] Node '{}': Track ended -> {} (reason: {})", event.getNode().getName(), event.getTrack().getInfo().getTitle(), event.getEndReason());
-        mH.getOrCreateTrackScheduler(event.getGuildId()).onTrackEnd(event.getTrack(), event.getEndReason());
+        mH.getOrCreateGuildMusicHandler(event.getGuildId()).getScheduler().onTrackEnd(event.getTrack(), event.getEndReason().getMayStartNext());
     }
 
     public void handleTrackException(TrackExceptionEvent event){
-        logger.debug("[Lava-Listener] Node '{}': Track exception -> {} (error: {})", event.getNode().getName(), event.getTrack().getInfo().getTitle(), event.getException().getMessage());
+        logger.warn("[Lava-Listener] Node '{}': Track exception -> {} (error: {})", event.getNode().getName(), event.getTrack().getInfo().getTitle(), event.getException().getMessage());
 
         // TODO: Play next song or stop
     }
 
     public void handleTrackStuck(TrackStuckEvent event){
         logger.debug("[Lava-Listener] Node '{}': Track stuck -> {} (thresholdMs: {})", event.getNode().getName(), event.getTrack().getInfo().getTitle(), event.getThresholdMs());
-
         // TODO: Play next song or stop
     }
 

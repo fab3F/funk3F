@@ -78,8 +78,7 @@ public class ConfigCmd implements ServerCommand {
     }
 
     private void handleOptionError(String optionName, String optionValue, String serverId, SlashCommandInteractionEvent event) {
-        String msg = String.format("Fehler beim Ändern von '%s' zu '%s' für den Server '%s'", optionName, optionValue, serverId);
-        logger.debug(msg);
+        logger.debug("Fehler beim Ändern von '{}' zu '{}' für den Server '{}'", optionName, optionValue, serverId);
         event.getHook().sendMessage("Fehler beim Ändern folgender Einstellung (Es wurde nichts geändert): " + optionName).queue();
         event.getChannel().sendMessageEmbeds(printCurrent(serverId)).queue();
     }

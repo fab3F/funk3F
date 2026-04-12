@@ -13,10 +13,10 @@ import net.fab3F.bot.listener.VoiceListener;
 import net.fab3F.bot.listener.MessageListener;
 import net.fab3F.bot.listener.SlashCommandListener;
 import net.fab3F.bot.music.MusicHandler;
-import net.fab3F.bot.perm.PermissionWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.util.List;
 
 public class Bot {
@@ -25,7 +25,6 @@ public class Bot {
     private ShardManager shardManager;
     private final ConfigWorker cw;
     private final CommandManager commandManager;
-    private final PermissionWorker pW;
     private final MusicHandler musicHandler;
     private long lastMusicPlayerManagerRestart;
 
@@ -35,24 +34,16 @@ public class Bot {
             System.exit(0);
         }
         this.cw = cw;
-        this.pW = new PermissionWorker();
 
         long botId = Helpers.getUserIdFromToken(token);
         this.musicHandler = new MusicHandler(botId, cw);
-        this.commandManager = new CommandManager(cw, pW, this.musicHandler);
-
-
+        this.commandManager = new CommandManager(cw, this.musicHandler);
 
         this.buildBot(token);
-        this.musicHandler.setShardManager(shardManager);
 
 
         lastMusicPlayerManagerRestart = System.currentTimeMillis();
-
-    }
-
-    public MusicHandler getMusicHandler(){
-        return this.musicHandler;
+        this.musicHandler.setShardManager(this.shardManager);
     }
 
     public void stop(){
@@ -71,7 +62,7 @@ public class Bot {
         DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(token);
         builder.setStatus(OnlineStatus.ONLINE);
         builder.addEventListeners(new SlashCommandListener(commandManager))
-                .addEventListeners(new VoiceListener())
+                .addEventListeners(new VoiceListener(this.musicHandler))
                 .addEventListeners(new MessageListener(cw, musicHandler));
         builder.setVoiceDispatchInterceptor(new JDAVoiceUpdateListener(this.musicHandler.getClient()));
         builder.enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_VOICE_STATES);
