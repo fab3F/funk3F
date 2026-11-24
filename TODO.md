@@ -10,3 +10,6 @@
     -> Server wird gelöscht
     -> Irgendwas anderes wird gelöscht oder so
     -> Irgendeine Grundlage wird geändert, wovon ausgegangen wird dass sie die ganze Zeit gleich bleibt
+- prüfen, warum der logger im config worker erst später gesetzt wird
+- warum ist der bot exit bei falschem token System.exit und keine exit funktion der Main??
+- Einheitlich Festlegen, ob Config-Gültigkeiten alle im Config-Worker oder in den Klassen geprüft werden

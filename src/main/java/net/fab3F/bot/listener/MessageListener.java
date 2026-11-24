@@ -52,13 +52,6 @@ public class MessageListener extends ListenerAdapter {
                     event.getChannel().sendMessage("Reloading Bot Config! Not everything (like bot token) will be reloaded and requires restart.").queue();
                     Main.reloadBotConfig();
                 }
-            } else if (msg.startsWith("autoplay3243423")) {
-                logger.debug("Autoplay: {}", msg);
-                VoiceHelper.joinHelper(event.getMember(), event.getGuild().getSelfMember(), event.getJDA(), true);
-                //mH.getOrCreateTrackScheduler(event.getGuild().getIdLong()).startAutoplay(event.getChannel().asTextChannel().getIdLong());
-            } else if (msg.startsWith("sktip2134234")) {
-                logger.debug("Skip: {}", msg);
-                //mH.getOrCreateTrackScheduler(event.getGuild().getIdLong()).skip();
             }
         }
     }

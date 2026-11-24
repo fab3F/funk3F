@@ -63,5 +63,7 @@ config/*
 !config/server/
 config/server/*
 !config/server/template.yml
-
 logs
+.env
+logs/
+config/
