@@ -22,7 +22,9 @@ public class MessageListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if(cw.getBotConfig().getAdminIds().contains(event.getAuthor().getId())) {
+        if (!event.isFromGuild()) return;
+
+        if(cw.readBotConfig(false).getAdminIds().contains(event.getAuthor().getId())) {
             String msg = event.getMessage().getContentDisplay();
             String[] parts = msg.split(" ");
             if(parts.length <= 1)
@@ -32,8 +34,9 @@ public class MessageListener extends ListenerAdapter {
                 logger.debug("Shutdown recieved: {}", msg);
                 String id = parts[1];
                 if (id.equals(event.getGuild().getSelfMember().getId())) {
-                    event.getChannel().sendMessage("Shutdown!").queue();
-                    Main.exit();
+                    event.getChannel().sendMessage("Shutdown!").queue(
+                            ok -> Main.exit(Main.ExitCode.EXIT_OK),
+                            err -> Main.exit(Main.ExitCode.EXIT_OK));
                 }
             } else if (msg.startsWith("restart")) {
                 logger.debug("Restart recieved: {}", msg);

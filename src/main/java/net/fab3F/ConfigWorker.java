@@ -20,8 +20,7 @@ import java.util.Map;
 public class ConfigWorker {
     private Logger logger = null;
     private final String configPath;
-    private final String sep = java.io.File.separator;
-    private BotConfig current = null;
+    private volatile BotConfig current = null;
 
     public ConfigWorker(String configPath){
         this.configPath = configPath;
@@ -69,20 +68,18 @@ public class ConfigWorker {
         }
     }
 
-    public BotConfig getBotConfig(){
-        return current;
-    }
-
-    public BotConfig readBotConfig() throws IllegalArgumentException{
-        Path file = Paths.get(this.configPath + this.sep + "config.yml");
-        YAMLMapper mapper = new YAMLMapper();
+    public BotConfig readBotConfig(boolean reload) throws IllegalArgumentException {
+        if(!reload && current != null) {
+            return current;
+        }
+        Path file = Paths.get(this.configPath, "config.yml");
         try {
-            BotConfig config = mapper.readValue(file, BotConfig.class);
+            BotConfig config = new YAMLMapper().readValue(file, BotConfig.class);
             config.validate();
             this.current = config;
             return config;
         } catch (JacksonException e) {
-            throw new IllegalArgumentException("Error while reading bot config. Make sure the config file is correct. Path: " + this.configPath + "\\config.yml\n" + e.getMessage());
+            throw new IllegalArgumentException("Error while reading bot config. Make sure the config file is correct. Path: " + file + "\n" + e.getMessage(), e);
         }
     }
 
@@ -103,7 +100,6 @@ public class ConfigWorker {
             return null;
         }
     }
-
 
     // Config Classes
     public static class ServerConfig {
@@ -139,34 +135,37 @@ public class ConfigWorker {
         public BotConfig(){}
 
         private String token;
+        private String logMode;
+
+        private List<String> adminIds;
+        private List<String> activity;
+
         private String lastFmBase;
         private String lastFmKey;
         private String lastFmSecret;
-        private String logMode;
+
         private String autoplayerName;
+        private List<LavalinkNodeConfig> lavalinkNodes;
+
         private String logPath;
         private String serverConfigPath;
         private String publicYtApiUrl;
         private String publicYtApiKey;
         private String volumeScale;
-        private String lavalinkAddress;
-        private String lavalinkPort;
-        private String lavalinkPassword;
 
-        // Default values
-        private final List<String> adminIds = List.of("502823513443401730");
-        private final List<String> activity = Arrays.asList("watching", "fab3F Homepage");
-
-
-        public void validate(){
-
+        private void validate(){
             // required
             this.token = require(this.token, "token");
-            this.lavalinkAddress = require(this.lavalinkAddress, "lavalinkAddress");
-            this.lavalinkPort = require(this.lavalinkPort, "lavalinkPort");
-            this.lavalinkPassword = require(this.lavalinkPassword, "lavalinkPassword");
-
+            this.lavalinkNodes = require(this.lavalinkNodes, "lavalinkNodes");
+            for (LavalinkNodeConfig n : this.lavalinkNodes) {
+                require(n.getName(), "lavalinkNodes.name");
+                require(n.getAddress(), "lavalinkNodes.address");
+                require(n.getPort(), "lavalinkNodes.port");
+                require(n.getPassword(), "lavalinkNodes.password");
+            }
             // optional (with defaults)
+            this.adminIds = fallback(this.adminIds, List.of("502823513443401730"));
+            this.activity = fallback(this.activity, Arrays.asList("watching", "fab3F Homepage"));
             this.logMode = fallback(this.logMode, "INFO");
             this.logPath = fallback(this.logPath, "logs");
             this.serverConfigPath = fallback(this.serverConfigPath, "server");
@@ -193,6 +192,12 @@ public class ConfigWorker {
             }
             return value.trim();
         }
+        private <T> List<T> require(List<T> content, String fieldName) {
+            if (content == null || content.isEmpty()) {
+                throw new IllegalArgumentException("Critical Configuration-Error: Required field '" + fieldName + "' missing or empty!");
+            }
+            return content;
+        }
 
         // optional
         private String fallback(String value, String defaultValue) {
@@ -201,6 +206,13 @@ public class ConfigWorker {
                 return defaultValue;
             }
             return value.trim();
+        }
+        private <T> List<T> fallback(List<T> content, List<T> defaultValue) {
+            if (content == null || content.isEmpty()) {
+                System.out.println("[CONFIG-WARNING] Using default value: " + defaultValue);
+                return defaultValue;
+            }
+            return content;
         }
 
         // getters
@@ -217,13 +229,23 @@ public class ConfigWorker {
         public String getPublicYtApiUrl() { return publicYtApiUrl; }
         public String getPublicYtApiKey() { return publicYtApiKey; }
         public String getVolumeScale() { return volumeScale; }
-        public String getLavalinkAddress() { return lavalinkAddress; }
-        public String getLavalinkPort() { return lavalinkPort; }
-        public String getLavalinkPassword() { return lavalinkPassword; }
+        public List<LavalinkNodeConfig> getLavalinkNodes() { return lavalinkNodes; }
     }
 
 
-
+    public static class LavalinkNodeConfig {
+        public LavalinkNodeConfig(){}
+        public LavalinkNodeConfig(String name, String address, String port, String password, String region){
+            this.name = name; this.address = address; this.port = port;
+            this.password = password; this.region = region;
+        }
+        private String name, address, port, password, region;
+        public String getName() { return name; }
+        public String getAddress() { return address; }
+        public String getPort() { return port; }
+        public String getPassword() { return password; }
+        public String getRegion() { return region; }
+    }
 }
 
 

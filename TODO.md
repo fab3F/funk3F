@@ -1,0 +1,12 @@
+- loadYTRecommendation prüft nicht, ob eine gültige yt url vorliegt
+- stopGuild, stopAll sollten selbes synchronized haben wie getOrCreate
+- konsole wird mit allem möglich vollgespammt
+- lavalink server konsole ist auch sehr unübersichtlich
+- loggt docker nochmal zusätzlich zu bot und lavalink server?
+- richtige edge cases die passieren können z.B. während musik gespielt wird
+    -> Bot wird vom Server gekickt/gebannt
+    -> dem Bot werden Berechtigungen entzogen
+    -> Voice/Text Channel wird gelöscht
+    -> Server wird gelöscht
+    -> Irgendwas anderes wird gelöscht oder so
+    -> Irgendeine Grundlage wird geändert, wovon ausgegangen wird dass sie die ganze Zeit gleich bleibt

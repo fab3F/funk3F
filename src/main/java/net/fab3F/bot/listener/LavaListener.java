@@ -7,6 +7,7 @@ import dev.arbjerg.lavalink.protocol.v4.TrackInfo;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.fab3F.bot.music.CustomTrackData;
+import net.fab3F.bot.music.GuildMusicHandler;
 import net.fab3F.bot.music.MusicHandler;
 import net.fab3F.bot.music.TrackScheduler;
 import org.slf4j.Logger;
@@ -22,11 +23,17 @@ public class LavaListener {
 
     public void handleTrackStart(TrackStartEvent event){
         Track track = event.getTrack();
-        TrackScheduler scheduler = mH.getOrCreateGuildMusicHandler(event.getGuildId()).getScheduler();
+        GuildMusicHandler guildMusicHandler = mH.getGuildMusicHandlerIfPresent(event.getGuildId());
+        if(guildMusicHandler == null) {
+            return;
+        }
+        TrackScheduler scheduler = guildMusicHandler.getScheduler();
+        if(!scheduler.onTrackStart(track)) {
+            return;
+        }
+
         Guild guild = scheduler.getGuild();
         logger.debug("[Lava-Listener] Node: '{}'; Guild: '{} ({})' ; Track started -> {}", event.getNode().getName(), guild.getName(), guild.getId(), track.getInfo().getTitle());
-
-        scheduler.onTrackStart(track);
 
         TrackInfo info = track.getInfo();
         String msg = "Jetzt spielt: **`" + info.getTitle() + "`** von **`" + info.getAuthor() + "`** [" + MusicHandler.calcDuration((int)info.getLength()) + "]";
@@ -38,7 +45,11 @@ public class LavaListener {
 
     public void handleTrackEnd(TrackEndEvent event){
         logger.debug("[Lava-Listener] Node '{}': Track ended -> {} (reason: {})", event.getNode().getName(), event.getTrack().getInfo().getTitle(), event.getEndReason());
-        mH.getOrCreateGuildMusicHandler(event.getGuildId()).getScheduler().onTrackEnd(event.getTrack(), event.getEndReason().getMayStartNext());
+        GuildMusicHandler guildMusicHandler = mH.getGuildMusicHandlerIfPresent(event.getGuildId());
+        if(guildMusicHandler == null) {
+            return;
+        }
+        guildMusicHandler.getScheduler().onTrackEnd(event.getTrack(), event.getEndReason().name(), event.getEndReason().getMayStartNext());
     }
 
     public void handleTrackException(TrackExceptionEvent event){
@@ -49,7 +60,10 @@ public class LavaListener {
 
     public void handleTrackStuck(TrackStuckEvent event){
         logger.debug("[Lava-Listener] Node '{}': Track stuck -> {} (thresholdMs: {})", event.getNode().getName(), event.getTrack().getInfo().getTitle(), event.getThresholdMs());
-        // TODO: Play next song or stop
+        GuildMusicHandler h = mH.getGuildMusicHandlerIfPresent(event.getGuildId());
+        if (h != null) {
+            h.getScheduler().skip();
+        }
     }
 
     public void handleWebsocketClosed(WebSocketClosedEvent event){

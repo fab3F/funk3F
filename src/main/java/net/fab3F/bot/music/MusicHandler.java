@@ -4,15 +4,17 @@ import dev.arbjerg.lavalink.client.LavalinkClient;
 import dev.arbjerg.lavalink.client.Link;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.managers.DirectAudioController;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.fab3F.ConfigWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class MusicHandler {
     private final Logger logger = LoggerFactory.getLogger(MusicHandler.class);
@@ -32,7 +34,7 @@ public class MusicHandler {
         this.sM = sM;
     }
 
-    public GuildMusicHandler getOrCreateGuildMusicHandler(long guildId){
+    public GuildMusicHandler getOrCreateGuildMusicHandler(long guildId) {
         synchronized (this){
             Guild g = this.sM.getGuildById(guildId);
             if(g != null){
@@ -40,9 +42,13 @@ public class MusicHandler {
             }
             return null;
         }
-
     }
 
+    public GuildMusicHandler getGuildMusicHandlerIfPresent(long guildId) {
+        synchronized (this) {
+            return handlers.get(guildId);
+        }
+    }
 
     //Checks if content can be added
     public boolean addContent(String input, SlashCommandInteractionEvent e, boolean playAsFirst){
@@ -67,6 +73,12 @@ public class MusicHandler {
     }
 
     public void addAutoplayContent(String input, long guildId, long channelId){
+        GuildMusicHandler musicHandler = this.getGuildMusicHandlerIfPresent(guildId);
+        if(musicHandler == null) {
+            logger.debug("Cancelled Autoplay-Loading of input \"{}\", because GuildMusicHandler was stopped while loading.", input);
+            return;
+        }
+
         logger.debug("Loading new Autoplay input: {}", input);
         if(!input.startsWith("https")){
             input = "ytsearch:" + input + " audio";
@@ -74,40 +86,65 @@ public class MusicHandler {
 
         final Link link = this.client.getOrCreateLink(guildId);
 
-        link.loadItem(input).subscribe(new AudioLoader(input, this.getOrCreateGuildMusicHandler(guildId).getScheduler(), channelId));
+        link.loadItem(input).subscribe(new AudioLoader(input, musicHandler.getScheduler(), channelId));
     }
 
     public boolean stopGuild(Guild guild){
-        long id = guild.getIdLong();
-        if(!this.handlers.containsKey(id)){
-            return false;
+        GuildMusicHandler guildMusicHandler;
+        synchronized (this) {
+            guildMusicHandler = this.handlers.remove(guild.getIdLong());
         }
-
-        this.handlers.get(id).getLink().ifPresent(
-                (link) -> link.destroy().subscribe()
-        );
-
-        guild.getJDA().getDirectAudioController().disconnect(guild);
-
-        this.handlers.remove(id);
-        return true;
+        if (guildMusicHandler != null) {
+            release(guildMusicHandler);
+            return true;
+        }
+        // No handler but bot might be stuck in voice channel
+        if (VoiceHelper.inVoiceChannel(guild.getSelfMember()) != null) {
+            Link link = this.client.getLinkIfCached(guild.getIdLong());
+            if (link != null) {
+                link.destroy().subscribe();
+            }
+            guild.getJDA().getDirectAudioController().disconnect(guild);
+            return true;
+        }
+        return false;
     }
 
-    public void stopAll(DirectAudioController audioController){
-        Iterator<Map.Entry<Long, GuildMusicHandler>> iterator = this.handlers.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Long, GuildMusicHandler> entry = iterator.next();
-            GuildMusicHandler handler = entry.getValue();
-            Long id = entry.getKey();
-            if (handler != null) {
-                handler.getLink().ifPresent(
-                        (link) -> link.destroy().subscribe()
-                );
-                audioController.disconnect(this.sM.getGuildById(id));
-                this.handlers.remove(id);
-            }
-            iterator.remove();
+    public int stopAll(Duration timeout){
+        List<GuildMusicHandler> all;
+        synchronized (this) {
+            all = new ArrayList<>(handlers.values());
+            handlers.clear();
         }
+        CompletableFuture<?>[] futures = all.stream().map(this::release).toArray(CompletableFuture[]::new);
+        try {
+            CompletableFuture.allOf(futures).get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            logger.warn("Not all players were terminated in time.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            logger.warn("Error while closing the players: {}", e.getMessage());
+        }
+        return all.size();
+    }
+
+    private CompletableFuture<Void> release(GuildMusicHandler handler) {
+        Guild guild = handler.getGuild();
+        handler.getScheduler().close();
+        CompletableFuture<Void> destroyed = handler.getLink()
+                .map(link -> link.destroy().toFuture().<Void>thenApply(ignored -> null))
+                .orElseGet(() -> CompletableFuture.completedFuture(null))
+                .exceptionally(err -> {
+                    logger.warn("Player Destruction faield: {}", err.getMessage());
+                    return null;
+                });
+        guild.getJDA().getDirectAudioController().disconnect(guild);
+        return destroyed;
+    }
+
+    public void close() {
+        this.client.close();
     }
 
     public LavalinkClient getClient(){

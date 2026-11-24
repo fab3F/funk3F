@@ -104,7 +104,7 @@ public class CommandManager {
 
         PermissionGroup neededUserPerm = cmd.getUserPermission();
         String permCheck2 = PermissionWorker.hasPermission(e.getMember(), neededUserPerm);
-        if(!permCheck2.equals("_TRUE_") && !cw.getBotConfig().getAdminIds().contains(e.getUser().getId())){
+        if(!permCheck2.equals("_TRUE_") && !cw.readBotConfig(false).getAdminIds().contains(e.getUser().getId())){
             e.reply("Um diesen Befehl auszuführen ist folgende Berechtigungsgruppe erforderlich:\n" +
                     neededUserPerm.name() + " - " + neededUserPerm.getDescription() + "\n" +
                     "Folgende Berechtigung(en) fehlen dir: " + permCheck2.replaceFirst("_FALSE_", "")).setEphemeral(true).queue();
@@ -131,7 +131,7 @@ public class CommandManager {
         }
 
 
-        if (!cmd.peformCommand(e)) {
+        if (!cmd.performCommand(e)) {
             try {
                 e.reply(getUsage(cmd, cmdName)).setEphemeral(true).queue();
             } catch (Exception ex) {

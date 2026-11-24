@@ -28,7 +28,7 @@ public class PingCmd implements ServerCommand {
     }
 
     @Override
-    public boolean peformCommand(SlashCommandInteractionEvent event) {
+    public boolean performCommand(SlashCommandInteractionEvent event) {
         long time = System.currentTimeMillis();
         event.getChannel().sendTyping().queue(v -> {
             long ping = System.currentTimeMillis() - time;

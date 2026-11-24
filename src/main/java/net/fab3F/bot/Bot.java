@@ -2,6 +2,7 @@ package net.fab3F.bot;
 
 import dev.arbjerg.lavalink.client.Helpers;
 import dev.arbjerg.lavalink.libraries.jda.JDAVoiceUpdateListener;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -17,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Bot {
@@ -31,7 +34,7 @@ public class Bot {
     public Bot(String token, ConfigWorker cw){
         if(token==null || token.isBlank()){
             logger.error("01: No Discord Bot Token.");
-            System.exit(0);
+            System.exit(1);
         }
         this.cw = cw;
 
@@ -47,13 +50,27 @@ public class Bot {
     }
 
     public void stop(){
-        musicHandler.stopAll();
+        logger.info("Stopping Bot");
+        if (musicHandler.stopAll(Duration.ofSeconds(3)) > 0) {
+            sleep(1000);
+        }
+        List<JDA> shards = new ArrayList<>(shardManager.getShards());
         shardManager.setStatus(OnlineStatus.OFFLINE);
         shardManager.shutdown();
+        for (JDA shard : shards) {
+            try {
+                if (!shard.awaitShutdown(Duration.ofSeconds(4))) {
+                    shard.shutdownNow();
+                }
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        musicHandler.close();
     }
 
     public void reloadActivity(){
-        this.shardManager.setActivity(getActivity(cw.getBotConfig().getActivity()));
+        this.shardManager.setActivity(getActivity(cw.readBotConfig(false).getActivity()));
     }
 
 
@@ -89,6 +106,14 @@ public class Bot {
             }
         }
         return Activity.customStatus("My owner cannot configure this Bot.");
+    }
+
+    private static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+        }
     }
 
 }

@@ -14,7 +14,7 @@ public class VolumeMusicCmd extends ServerMusicCommand {
     }
 
     @Override
-    public boolean peformCommand(SlashCommandInteractionEvent e) {
+    public boolean performCommand(SlashCommandInteractionEvent e) {
 
         if(!VoiceHelper.joinHelper(e.getMember(), e.getGuild().getSelfMember(), e.getJDA(), false)){
             return false;

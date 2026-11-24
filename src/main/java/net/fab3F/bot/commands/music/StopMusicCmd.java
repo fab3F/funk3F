@@ -12,13 +12,13 @@ public class StopMusicCmd extends ServerMusicCommand {
     }
 
     @Override
-    public boolean peformCommand(SlashCommandInteractionEvent e) {
+    public boolean performCommand(SlashCommandInteractionEvent e) {
         if(e.getGuild() == null){
             return false;
         }
 
         // Check for same voice channel
-        if(!VoiceHelper.joinHelper(e.getMember(), e.getGuild().getSelfMember(), e.getJDA(), true)){
+        if(!VoiceHelper.joinHelper(e.getMember(), e.getGuild().getSelfMember(), e.getJDA(), false)){
             return false;
         }
 
@@ -27,7 +27,6 @@ public class StopMusicCmd extends ServerMusicCommand {
             return true;
         }
         return false;
-
     }
 
     @Override

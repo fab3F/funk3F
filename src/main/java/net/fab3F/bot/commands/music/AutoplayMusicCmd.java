@@ -16,7 +16,7 @@ public class AutoplayMusicCmd extends ServerMusicCommand {
     }
 
     @Override
-    public boolean peformCommand(SlashCommandInteractionEvent e) {
+    public boolean performCommand(SlashCommandInteractionEvent e) {
         if(e.getGuild() == null){
             return false;
         }

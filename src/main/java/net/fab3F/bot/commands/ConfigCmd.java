@@ -28,7 +28,7 @@ public class ConfigCmd implements ServerCommand {
     }
 
     @Override
-    public boolean peformCommand(SlashCommandInteractionEvent event) {
+    public boolean performCommand(SlashCommandInteractionEvent event) {
 
         event.deferReply().queue();
         List<OptionMapping> options = event.getOptions();

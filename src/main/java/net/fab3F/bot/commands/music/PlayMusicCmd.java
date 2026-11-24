@@ -18,7 +18,7 @@ public class PlayMusicCmd extends ServerMusicCommand {
     }
 
     @Override
-    public boolean peformCommand(SlashCommandInteractionEvent e) {
+    public boolean performCommand(SlashCommandInteractionEvent e) {
         if(e.getOption("title") == null || e.getGuild() == null){
             return false;
         }
@@ -35,7 +35,7 @@ public class PlayMusicCmd extends ServerMusicCommand {
 
     @Override
     public PermissionGroup getUserPermission() {
-        return PermissionGroup.ADMIN;
+        return PermissionGroup.VOICE_NORMAL;
     }
 
     @Override

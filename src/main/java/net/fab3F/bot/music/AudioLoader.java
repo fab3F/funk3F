@@ -115,12 +115,15 @@ public class AudioLoader extends AbstractAudioLoadResultHandler {
     }
 
     private void handleAutoplayError(String dcMsg, String errMsg){
+        logger.error("{}\nThis was the input: {}", errMsg, input);
+        if (input.startsWith("ytsearch:")) {
+            return;
+        }
         this.scheduler.stopAutoplay();
         TextChannel channel = this.scheduler.getGuild().getChannelById(TextChannel.class, channelId);
         if(channel != null){
             channel.sendMessage(dcMsg + "\nAutoplay wurde deaktiviert.").queue();
         }
-        logger.error("{}\nThis was the input: {}", errMsg, input);
     }
 
 }

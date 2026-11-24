@@ -22,7 +22,7 @@ public class AutoplayLoader {
 
     public AutoplayLoader(MusicHandler musicHandler, ConfigWorker cw){
         this.userAgent = "Music Bot/" + Main.VERSION + " funk3F";
-        ConfigWorker.BotConfig botConfig = cw.getBotConfig();
+        ConfigWorker.BotConfig botConfig = cw.readBotConfig(false);
         this.base = botConfig.getLastFmBase();
         this.lastFmKey = botConfig.getLastFmKey();
         this.musicHandler = musicHandler;

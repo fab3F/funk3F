@@ -1,5 +1,7 @@
 package net.fab3F.bot.listener;
 
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -16,17 +18,24 @@ public class VoiceListener extends ListenerAdapter {
 
     @Override
     public void onGuildVoiceUpdate(GuildVoiceUpdateEvent e) {
-        VoiceChannel vc = VoiceHelper.inVoiceChannel(e.getGuild().getSelfMember());
-        // if bot is not in voice channel
-        if(vc == null) {
-            this.musicHandler.stopGuild(e.getGuild());
-        // if bot is in voice channel
-        } else {
-            // if all members are bots -> stop music
-            if (vc.getMembers().stream().allMatch(m -> m.getUser().isBot())) {
-                this.musicHandler.stopGuild(e.getGuild());
+        Guild guild = e.getGuild();
+        Member self = guild.getSelfMember();
+
+        // Bot left channel (disconnected/kicked)
+        if (e.getMember().getIdLong() == self.getIdLong()) {
+            if (e.getChannelJoined() == null) {
+                musicHandler.stopGuild(guild);
             }
+            return;
+        }
+
+        // User left channel (check if only bots are left)
+        VoiceChannel botChannel = VoiceHelper.inVoiceChannel(self);
+        if (botChannel != null
+                && e.getChannelLeft() != null
+                && e.getChannelLeft().getIdLong() == botChannel.getIdLong()
+                && botChannel.getMembers().stream().allMatch(m -> m.getUser().isBot())) {
+            musicHandler.stopGuild(guild);
         }
     }
-
 }

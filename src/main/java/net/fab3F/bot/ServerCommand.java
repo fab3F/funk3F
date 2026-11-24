@@ -6,7 +6,7 @@ public interface ServerCommand {
         return "{cmdName}";
     }
 
-    boolean peformCommand(net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent event);
+    boolean performCommand(net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent event);
     boolean isOnlyForServer();
     net.fab3F.bot.perm.PermissionGroup getUserPermission();
 

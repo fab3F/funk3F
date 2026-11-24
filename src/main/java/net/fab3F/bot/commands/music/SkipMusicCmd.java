@@ -2,6 +2,7 @@ package net.fab3F.bot.commands.music;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.fab3F.bot.ServerMusicCommand;
+import net.fab3F.bot.music.GuildMusicHandler;
 import net.fab3F.bot.music.MusicHandler;
 import net.fab3F.bot.music.VoiceHelper;
 import net.fab3F.bot.perm.PermissionGroup;
@@ -12,17 +13,17 @@ public class SkipMusicCmd extends ServerMusicCommand {
     }
 
     @Override
-    public boolean peformCommand(SlashCommandInteractionEvent e) {
+    public boolean performCommand(SlashCommandInteractionEvent e) {
         // check vc
-        if(!VoiceHelper.joinHelper(e.getMember(), e.getGuild().getSelfMember(), e.getJDA(), true)){
+        if(!VoiceHelper.joinHelper(e.getMember(), e.getGuild().getSelfMember(), e.getJDA(), false)){
             return false;
         }
 
-        if(this.musicHandler.getOrCreateGuildMusicHandler(e.getGuild().getIdLong()).getScheduler().skip()){
+        GuildMusicHandler handler = this.musicHandler.getGuildMusicHandlerIfPresent(e.getGuild().getIdLong());
+        if(handler != null && handler.getScheduler().skip()){
             e.reply("Aktueller Song wurde übersprungen.").queue();
             return true;
         }
-
         return false;
     }
 

@@ -4,6 +4,7 @@ import dev.arbjerg.lavalink.client.LavalinkClient;
 import dev.arbjerg.lavalink.client.LavalinkNode;
 import dev.arbjerg.lavalink.client.NodeOptions;
 import dev.arbjerg.lavalink.client.event.*;
+import dev.arbjerg.lavalink.client.loadbalancing.IRegionFilter;
 import dev.arbjerg.lavalink.client.loadbalancing.RegionGroup;
 import dev.arbjerg.lavalink.client.loadbalancing.builtin.VoiceRegionPenaltyProvider;
 import net.fab3F.ConfigWorker;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -29,7 +31,7 @@ public class LavaManager {
         this.lavaListener = new LavaListener(mH);
         this.client = new LavalinkClient(botId);
         this.client.getLoadBalancer().addPenaltyProvider(new VoiceRegionPenaltyProvider());
-        this.registerLavalinkNode(cw);
+        this.registerLavalinkNodes(cw);
         this.registerLavalinkListeners();
     }
 
@@ -37,18 +39,32 @@ public class LavaManager {
         return client;
     }
 
+    private void registerLavalinkNodes(ConfigWorker cw) {
+        for (ConfigWorker.LavalinkNodeConfig node : cw.readBotConfig(false).getLavalinkNodes()) {
+            NodeOptions.Builder b = new NodeOptions.Builder()
+                    .setName(node.getName())
+                    .setServerUri(URI.create("ws://" + node.getAddress() + ":" + node.getPort()))
+                    .setPassword(node.getPassword())
+                    .setHttpTimeout(5000L);
+            IRegionFilter region = parseRegion(node.getRegion());
+            if (region != null) {
+                b.setRegionFilter(region);
+            }
+            this.client.addNode(b.build());
+            logger.info("[Lava-Listener] Node registered: {} ({})", node.getName(), region);
+        }
+    }
 
-    private void registerLavalinkNode(ConfigWorker cw) {
-        NodeOptions options = new NodeOptions.Builder()
-                .setName("funk3F-Node")
-                .setServerUri(URI.create(String.format("ws://%s:%s",
-                        cw.getBotConfig().getLavalinkAddress(),
-                        cw.getBotConfig().getLavalinkPort())))
-                .setPassword(cw.getBotConfig().getLavalinkPassword())
-                .setRegionFilter(RegionGroup.EUROPE)
-                .setHttpTimeout(5000L)
-                .build();
-        this.client.addNode(options);
+    private IRegionFilter parseRegion(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return RegionGroup.INSTANCE.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            logger.warn("Unknown Region '{}', Node without Region filter", value);
+            return null;
+        }
     }
 
     private void registerLavalinkListeners() {
