@@ -13,3 +13,6 @@
 - prüfen, warum der logger im config worker erst später gesetzt wird
 - warum ist der bot exit bei falschem token System.exit und keine exit funktion der Main??
 - Einheitlich Festlegen, ob Config-Gültigkeiten alle im Config-Worker oder in den Klassen geprüft werden
+- sp_dc cookie spotify
+- spotify timeouts prüfen bei playlist request (test bereits in application.yml versucht mit höheren timeouts)
+- song.link als fallback oder evtl sogar bevorzugt für spotify song links
